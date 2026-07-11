@@ -5,7 +5,7 @@ const routes = [
   {
     path: "/studio",
     navName: "Studio",
-    heading: "Record your tab, camera, and voice",
+    heading: "Live stage",
   },
   { path: "/recordings", navName: "Recordings", heading: "Recordings" },
 ] as const;
@@ -46,7 +46,7 @@ test.describe("application routes", () => {
     await page
       .getByRole("link", { name: "Start Recording", exact: true })
       .click();
-    await expectRoute(page, "Studio", "Record your tab, camera, and voice");
+    await expectRoute(page, "Studio", "Live stage");
 
     await page
       .getByRole("navigation", { name: "Primary navigation" })

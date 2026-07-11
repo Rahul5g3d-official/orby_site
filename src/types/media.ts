@@ -4,8 +4,7 @@ export type StudioLayout =
   | "screen-bubble"
   | "screen-side"
   | "grid"
-  | "pip"
-  | "custom";
+  | "pip";
 
 export type AudioMode =
   "natural" | "voice-boost" | "noise-reduced" | "broadcast" | "warm";

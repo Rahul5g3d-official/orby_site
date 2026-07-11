@@ -348,30 +348,6 @@ export async function createCanvasComposition(
             height,
           );
         }
-
-        if (options.layout === "custom") {
-          if (screen) drawContain(context, screen.video, 0, 0, width, height);
-          else drawEmptyState(context, width, height, "Custom layout");
-
-          if (camera) {
-            const cardWidth = width * 0.22;
-            const cardHeight = cardWidth * 0.62;
-            drawRoundedVideo(
-              context,
-              camera.video,
-              48,
-              48,
-              cardWidth,
-              cardHeight,
-              24,
-            );
-            drawLabel(context, camera.label, 70, 48 + cardHeight - 18);
-          }
-
-          context.fillStyle = "rgba(99, 102, 241, 0.72)";
-          context.font = "28px Inter, sans-serif";
-          context.fillText("Custom top-left webcam layout", 64, height - 64);
-        }
       } catch {
         // A source can briefly have no decoded frame while switching or resuming.
       }

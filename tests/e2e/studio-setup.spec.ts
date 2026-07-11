@@ -7,7 +7,6 @@ const layoutNames = [
   "Screen + side camera",
   "Two-source grid",
   "Picture-in-picture",
-  "Custom top-left",
 ] as const;
 
 const voiceModeNames = [
@@ -109,13 +108,11 @@ test("the single-webcam setup retains every layout, voice mode, and microphone-t
   ).toHaveCount(0);
   await expect(
     dialog.getByRole("heading", {
-      name: "Choose and test your sound",
+      name: "Voice mode",
       exact: true,
     }),
   ).toHaveCount(0);
 
-  await expect(dialog.getByText("Google Meet:", { exact: true })).toBeVisible();
-  await expect(dialog.getByText(/Share tab audio/).first()).toBeVisible();
   await expect(
     dialog.getByRole("button", { name: "Choose shared source", exact: true }),
   ).toBeVisible();

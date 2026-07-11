@@ -32,10 +32,10 @@ export function VoiceModeSelector({
   disabled = false,
 }: VoiceModeSelectorProps) {
   const groupId = useId();
-  const descriptionId = `${groupId}-description`;
 
   return (
-    <fieldset disabled={disabled} aria-describedby={descriptionId}>
+    <fieldset disabled={disabled}>
+      <legend className="sr-only">Voice mode</legend>
       <div className="grid gap-2">
         {options.map((option) => {
           const Icon = icons[option.id];

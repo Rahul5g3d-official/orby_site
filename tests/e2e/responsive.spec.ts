@@ -30,7 +30,7 @@ test("the core visual flow stays inside desktop and mobile viewports", async ({
   await expect(
     page.getByRole("heading", {
       level: 1,
-      name: "Record your tab, camera, and voice",
+      name: "Live stage",
     }),
   ).toBeVisible();
   await expect(
@@ -74,7 +74,7 @@ test("the core visual flow stays inside desktop and mobile viewports", async ({
   await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
   await expect(
     dialog.getByRole("heading", {
-      name: "Choose and test your sound",
+      name: "Voice mode",
       exact: true,
     }),
   ).toBeVisible();

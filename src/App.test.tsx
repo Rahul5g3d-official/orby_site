@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import { createMemoryRouter, RouterProvider } from "react-router-dom";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import App from "./App";
@@ -27,16 +27,22 @@ describe("App data-router integration", () => {
       initialEntries: ["/studio"],
     });
 
-    render(<RouterProvider router={router} />);
+    render(
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />,
+    );
 
+    const liveStageHeading = await screen.findByRole("heading", {
+      level: 1,
+      name: "Live stage",
+    });
+    expect(liveStageHeading).toBeVisible();
+
+    const liveStageHeader = liveStageHeading.parentElement?.parentElement;
+    expect(liveStageHeader).not.toBeNull();
     expect(
-      await screen.findByRole("heading", {
-        level: 1,
-        name: "Record your tab, camera, and voice",
+      within(liveStageHeader as HTMLElement).getByRole("button", {
+        name: /Studio setup/,
       }),
-    ).toBeVisible();
-    expect(
-      screen.getByRole("button", { name: /Studio setup/ }),
     ).toHaveAttribute("aria-haspopup", "dialog");
     expect(screen.queryByText(/phone camera|QR code/i)).not.toBeInTheDocument();
   });

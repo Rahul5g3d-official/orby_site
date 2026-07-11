@@ -21,7 +21,7 @@ export function Navbar() {
             <Video className="h-5 w-5" />
           </span>
           <span className="truncate text-sm font-semibold sm:text-base">
-            Screen Recorder
+            framesync
           </span>
         </NavLink>
         <nav
