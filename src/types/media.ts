@@ -28,14 +28,7 @@ export interface MediaDeviceOption {
   label: string;
 }
 
-export interface RemoteCamera {
-  peerId: string;
-  label: string;
-  stream: MediaStream;
-  status: "connecting" | "connected" | "disconnected";
-}
-
 export interface MediaError {
-  source: "camera" | "microphone" | "screen" | "recorder" | "webrtc" | "storage";
+  source: "camera" | "microphone" | "screen" | "recorder" | "storage";
   message: string;
 }

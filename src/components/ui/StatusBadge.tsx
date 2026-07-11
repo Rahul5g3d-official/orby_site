@@ -6,7 +6,7 @@ interface StatusBadgeProps {
 }
 
 const classes = {
-  idle: "bg-white/8 text-studio-muted border-white/10",
+  idle: "bg-white/[0.08] text-studio-muted border-white/10",
   connected: "bg-studio-success/15 text-green-300 border-studio-success/30",
   connecting: "bg-studio-cyan/15 text-cyan-200 border-studio-cyan/30",
   recording: "bg-studio-danger/15 text-red-200 border-studio-danger/35",

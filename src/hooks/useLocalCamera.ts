@@ -6,22 +6,56 @@ export function useLocalCamera() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const cleanupEndedListenerRef = useRef<(() => void) | null>(null);
+  const requestIdRef = useRef(0);
 
   const stopCamera = useCallback(() => {
+    requestIdRef.current += 1;
+    cleanupEndedListenerRef.current?.();
+    cleanupEndedListenerRef.current = null;
     stopStream(streamRef.current);
     streamRef.current = null;
     setStream(null);
+    setIsLoading(false);
   }, []);
 
   const startCamera = useCallback(
     async (deviceId?: string) => {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
       setIsLoading(true);
       setError(null);
-      stopCamera();
+
+      cleanupEndedListenerRef.current?.();
+      cleanupEndedListenerRef.current = null;
+      stopStream(streamRef.current);
+      streamRef.current = null;
+      setStream(null);
 
       try {
         const nextStream = await requestCamera(deviceId);
+        if (requestId !== requestIdRef.current) {
+          stopStream(nextStream);
+          return null;
+        }
+
+        const videoTrack = nextStream.getVideoTracks()[0];
+        if (!videoTrack || videoTrack.readyState !== "live") {
+          stopStream(nextStream);
+          throw new Error("The selected webcam did not provide a live video track.");
+        }
+
+        const handleEnded = () => {
+          if (streamRef.current !== nextStream) return;
+          cleanupEndedListenerRef.current?.();
+          cleanupEndedListenerRef.current = null;
+          streamRef.current = null;
+          setStream(null);
+        };
+        videoTrack.addEventListener("ended", handleEnded);
+
         streamRef.current = nextStream;
+        cleanupEndedListenerRef.current = () => videoTrack.removeEventListener("ended", handleEnded);
         setStream(nextStream);
         return nextStream;
       } catch (caughtError) {
@@ -29,10 +63,10 @@ export function useLocalCamera() {
         setError(message);
         return null;
       } finally {
-        setIsLoading(false);
+        if (requestId === requestIdRef.current) setIsLoading(false);
       }
     },
-    [stopCamera],
+    [],
   );
 
   useEffect(() => stopCamera, [stopCamera]);

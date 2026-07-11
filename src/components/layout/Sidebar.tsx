@@ -1,9 +1,9 @@
-import { MonitorUp, Mic2, Smartphone, SplitSquareHorizontal } from "lucide-react";
+import { Camera, MonitorUp, Mic2, SplitSquareHorizontal } from "lucide-react";
 
 const items = [
   { icon: MonitorUp, label: "Screen capture" },
   { icon: Mic2, label: "Audio mixing" },
-  { icon: Smartphone, label: "Phone cameras" },
+  { icon: Camera, label: "One webcam" },
   { icon: SplitSquareHorizontal, label: "Layouts" },
 ];
 

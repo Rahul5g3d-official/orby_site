@@ -5,6 +5,7 @@ export function supportsRecordingApis(): boolean {
     typeof navigator.mediaDevices?.getUserMedia === "function" &&
       typeof navigator.mediaDevices?.getDisplayMedia === "function" &&
       typeof window.MediaRecorder === "function" &&
+      typeof window.MediaStream === "function" &&
       typeof HTMLCanvasElement.prototype.captureStream === "function",
   );
 }
@@ -32,21 +33,6 @@ export async function requestCamera(deviceId?: string, facingMode?: VideoFacingM
   });
 }
 
-export async function requestPhoneCamera(facingMode: VideoFacingModeEnum): Promise<MediaStream> {
-  return navigator.mediaDevices.getUserMedia({
-    video: {
-      facingMode,
-      width: { ideal: 1280 },
-      height: { ideal: 720 },
-    },
-    audio: {
-      echoCancellation: true,
-      noiseSuppression: true,
-      autoGainControl: true,
-    },
-  });
-}
-
 export async function requestMicrophone(deviceId?: string): Promise<MediaStream> {
   return navigator.mediaDevices.getUserMedia({
     audio: deviceId
@@ -66,10 +52,31 @@ export async function requestMicrophone(deviceId?: string): Promise<MediaStream>
 }
 
 export async function requestScreen(): Promise<MediaStream> {
-  return navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: true,
-  });
+  type DisplayAudioConstraints = MediaTrackConstraints & {
+    suppressLocalAudioPlayback?: boolean;
+  };
+  type ExtendedDisplayMediaOptions = Omit<DisplayMediaStreamOptions, "audio"> & {
+    audio?: boolean | DisplayAudioConstraints;
+    surfaceSwitching?: "include" | "exclude";
+    systemAudio?: "include" | "exclude";
+  };
+
+  const options: ExtendedDisplayMediaOptions = {
+    video: {
+      displaySurface: "browser",
+      frameRate: { ideal: 30, max: 60 },
+    },
+    audio: {
+      autoGainControl: false,
+      echoCancellation: false,
+      noiseSuppression: false,
+      suppressLocalAudioPlayback: false,
+    },
+    surfaceSwitching: "include",
+    systemAudio: "include",
+  };
+
+  return navigator.mediaDevices.getDisplayMedia(options);
 }
 
 export function stopStream(stream: MediaStream | null): void {

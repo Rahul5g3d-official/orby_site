@@ -13,7 +13,7 @@ export interface MixedAudioStream {
 function connectVoiceMode(
   context: AudioContext,
   source: MediaStreamAudioSourceNode,
-  destination: MediaStreamAudioDestinationNode,
+  destination: AudioNode,
   mode: AudioMode,
 ): AudioNode[] {
   if (mode === "natural") {
@@ -76,32 +76,70 @@ export async function createMixedAudioStream(
     return { stream: null, stop: () => undefined };
   }
 
+  if (audioSources.length === 1 && (audioSources[0].role === "system" || audioMode === "natural")) {
+    const sourceTrack = audioSources[0].stream.getAudioTracks().find((track) => track.readyState === "live");
+    if (!sourceTrack) return { stream: null, stop: () => undefined };
+
+    const clonedTrack = sourceTrack.clone();
+    const stream = new MediaStream([clonedTrack]);
+    return { stream, stop: () => clonedTrack.stop() };
+  }
+
   const AudioContextClass =
     window.AudioContext ||
-    (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+  if (!AudioContextClass) {
+    throw new Error("Audio mixing is unavailable in this browser. Use current Chrome or Edge.");
+  }
+
   const context = new AudioContextClass();
-  await context.resume();
   const destination = context.createMediaStreamDestination();
   const nodes: AudioNode[] = [];
-  const streamSources = audioSources.map((audioSource) => {
-    const source = context.createMediaStreamSource(audioSource.stream);
+  const streamSources: MediaStreamAudioSourceNode[] = [];
+  let stopped = false;
 
-    if (audioSource.role === "voice") {
-      nodes.push(...connectVoiceMode(context, source, destination, audioMode));
-    } else {
-      source.connect(destination);
+  const stop = () => {
+    if (stopped) return;
+    stopped = true;
+    streamSources.forEach((source) => source.disconnect());
+    nodes.forEach((node) => node.disconnect());
+    destination.stream.getTracks().forEach((track) => track.stop());
+    void context.close();
+  };
+
+  try {
+    await context.resume();
+    if (context.state !== "running") {
+      throw new Error("Audio mixing could not start. Click again or use current Chrome or Edge.");
     }
 
-    return source;
-  });
+    const limiter = context.createDynamicsCompressor();
+    limiter.threshold.value = -3;
+    limiter.knee.value = 0;
+    limiter.ratio.value = 20;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.12;
+    limiter.connect(destination);
+    nodes.push(limiter);
 
-  return {
-    stream: destination.stream,
-    stop: () => {
-      streamSources.forEach((source) => source.disconnect());
-      nodes.forEach((node) => node.disconnect());
-      destination.stream.getTracks().forEach((track) => track.stop());
-      void context.close();
-    },
-  };
+    audioSources.forEach((audioSource) => {
+      const source = context.createMediaStreamSource(audioSource.stream);
+      streamSources.push(source);
+
+      if (audioSource.role === "voice") {
+        nodes.push(...connectVoiceMode(context, source, limiter, audioMode));
+      } else {
+        const gain = context.createGain();
+        gain.gain.value = 0.9;
+        source.connect(gain);
+        gain.connect(limiter);
+        nodes.push(gain);
+      }
+    });
+
+    return { stream: destination.stream, stop };
+  } catch (error) {
+    stop();
+    throw error;
+  }
 }

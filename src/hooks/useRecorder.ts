@@ -2,6 +2,12 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createMediaRecorder } from "../services/recorderService";
 import type { RecorderResult, RecordingStatus } from "../types/recording";
 
+function detachRecorderHandlers(recorder: MediaRecorder): void {
+  recorder.ondataavailable = null;
+  recorder.onerror = null;
+  recorder.onstop = null;
+}
+
 export function useRecorder() {
   const [status, setStatus] = useState<RecordingStatus>("idle");
   const [durationMs, setDurationMs] = useState(0);
@@ -14,7 +20,11 @@ export function useRecorder() {
   const startedAtRef = useRef(0);
   const pausedAtRef = useRef<number | null>(null);
   const pausedDurationRef = useRef(0);
+  const recorderErrorRef = useRef<string | null>(null);
+  const resultRef = useRef<RecorderResult | null>(null);
+  const stopPromiseRef = useRef<Promise<RecorderResult | null> | null>(null);
   const stopResolverRef = useRef<((result: RecorderResult | null) => void) | null>(null);
+  const mountedRef = useRef(true);
 
   const calculateDuration = useCallback(() => {
     if (!startedAtRef.current) return 0;
@@ -29,71 +39,197 @@ export function useRecorder() {
     }
   }, []);
 
+  const settleStop = useCallback((nextResult: RecorderResult | null) => {
+    const resolve = stopResolverRef.current;
+    stopResolverRef.current = null;
+    stopPromiseRef.current = null;
+    resolve?.(nextResult);
+  }, []);
+
+  const revokeCurrentResult = useCallback(() => {
+    if (resultRef.current?.url) {
+      URL.revokeObjectURL(resultRef.current.url);
+    }
+    resultRef.current = null;
+  }, []);
+
+  const reportRecorderFailure = useCallback(
+    (message: string) => {
+      recorderErrorRef.current = message;
+      clearTimer();
+
+      if (mountedRef.current) {
+        setError(message);
+        setStatus("error");
+      }
+    },
+    [clearTimer],
+  );
+
   const startTimer = useCallback(() => {
     clearTimer();
     timerRef.current = window.setInterval(() => {
-      setDurationMs(calculateDuration());
+      if (mountedRef.current) {
+        setDurationMs(calculateDuration());
+      }
     }, 250);
   }, [calculateDuration, clearTimer]);
 
   const startRecording = useCallback(
     (stream: MediaStream) => {
-      if (!stream.active) {
-        setError("The composed media stream is not active.");
-        setStatus("error");
+      const currentRecorder = recorderRef.current;
+      if (stopPromiseRef.current || (currentRecorder && currentRecorder.state !== "inactive")) {
+        if (mountedRef.current) {
+          setError("A recording is already in progress.");
+        }
         return false;
       }
 
-      try {
-        const recorder = createMediaRecorder(stream);
-        chunksRef.current = [];
-        recorderRef.current = recorder;
-        startedAtRef.current = Date.now();
-        pausedAtRef.current = null;
-        pausedDurationRef.current = 0;
-        setDurationMs(0);
-        setResult(null);
-        setError(null);
+      if (!stream.active || !stream.getVideoTracks().some((track) => track.readyState === "live")) {
+        if (mountedRef.current) {
+          setError("The composed media stream is not active.");
+          setStatus("error");
+        }
+        return false;
+      }
 
-        recorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
+      if (currentRecorder) {
+        detachRecorderHandlers(currentRecorder);
+      }
+
+      clearTimer();
+      revokeCurrentResult();
+      chunksRef.current = [];
+      recorderErrorRef.current = null;
+      recorderRef.current = null;
+      startedAtRef.current = 0;
+      pausedAtRef.current = null;
+      pausedDurationRef.current = 0;
+
+      let recorder: MediaRecorder | null = null;
+
+      try {
+        const nextRecorder = createMediaRecorder(stream);
+        recorder = nextRecorder;
+        recorderRef.current = nextRecorder;
+        startedAtRef.current = Date.now();
+
+        if (mountedRef.current) {
+          setDurationMs(0);
+          setResult(null);
+          setError(null);
+        }
+
+        nextRecorder.ondataavailable = (event) => {
+          if (recorderRef.current === nextRecorder && event.data.size > 0) {
             chunksRef.current.push(event.data);
           }
         };
 
-        recorder.onerror = () => {
-          setError("Recording failed while writing media data.");
-          setStatus("error");
+        nextRecorder.onerror = (event) => {
+          if (recorderRef.current !== nextRecorder) return;
+
+          const mediaError = (event as Event & { error?: DOMException }).error;
+          const message = mediaError?.message || "Recording failed while writing media data.";
+          reportRecorderFailure(message);
+
+          // Resolve an in-flight stop immediately. The later stop event is still
+          // allowed to clean up, but must never publish data after an error.
+          settleStop(null);
+
+          if (nextRecorder.state !== "inactive") {
+            try {
+              nextRecorder.stop();
+            } catch {
+              // The recorder may already be transitioning to inactive as part of
+              // the error algorithm.
+            }
+          }
         };
 
-        recorder.onstop = () => {
+        nextRecorder.onstop = () => {
+          if (recorderRef.current !== nextRecorder) return;
+
           clearTimer();
+          recorderRef.current = null;
+          detachRecorderHandlers(nextRecorder);
+
           const finalDuration = calculateDuration();
-          const mimeType = recorder.mimeType || "video/webm";
-          const blob = new Blob(chunksRef.current, { type: mimeType });
-          const nextResult = {
-            blob,
-            url: URL.createObjectURL(blob),
-            durationMs: finalDuration,
-          };
-          setDurationMs(finalDuration);
-          setResult(nextResult);
-          setStatus("stopped");
-          stopResolverRef.current?.(nextResult);
-          stopResolverRef.current = null;
+          const recordingError = recorderErrorRef.current;
+
+          if (recordingError) {
+            chunksRef.current = [];
+            if (mountedRef.current) {
+              setDurationMs(finalDuration);
+              setResult(null);
+              setError(recordingError);
+              setStatus("error");
+            }
+            settleStop(null);
+            return;
+          }
+
+          try {
+            const mimeType = nextRecorder.mimeType || "video/webm";
+            const blob = new Blob(chunksRef.current, { type: mimeType });
+            chunksRef.current = [];
+
+            if (blob.size === 0) {
+              reportRecorderFailure("Recording produced an empty media file. Please try again.");
+              settleStop(null);
+              return;
+            }
+
+            if (!mountedRef.current) {
+              settleStop(null);
+              return;
+            }
+
+            const nextResult: RecorderResult = {
+              blob,
+              url: URL.createObjectURL(blob),
+              durationMs: finalDuration,
+            };
+            resultRef.current = nextResult;
+            setDurationMs(finalDuration);
+            setResult(nextResult);
+            setStatus("stopped");
+            settleStop(nextResult);
+          } catch (caughtError) {
+            const message = caughtError instanceof Error ? caughtError.message : "Unable to finalize the recording.";
+            reportRecorderFailure(message);
+            settleStop(null);
+          }
         };
 
-        recorder.start(1000);
-        setStatus("recording");
+        nextRecorder.start(1000);
+        if (mountedRef.current) {
+          setStatus("recording");
+        }
         startTimer();
         return true;
       } catch (caughtError) {
-        setError(caughtError instanceof Error ? caughtError.message : "Unable to start recording.");
-        setStatus("error");
+        clearTimer();
+        if (recorder) {
+          detachRecorderHandlers(recorder);
+          if (recorder.state !== "inactive") {
+            try {
+              recorder.stop();
+            } catch {
+              // Ignore cleanup errors; the original start error is actionable.
+            }
+          }
+        }
+        recorderRef.current = null;
+        chunksRef.current = [];
+        startedAtRef.current = 0;
+        const message = caughtError instanceof Error ? caughtError.message : "Unable to start recording.";
+        reportRecorderFailure(message);
+        settleStop(null);
         return false;
       }
     },
-    [calculateDuration, clearTimer, startTimer],
+    [calculateDuration, clearTimer, reportRecorderFailure, revokeCurrentResult, settleStop, startTimer],
   );
 
   const pauseRecording = useCallback(() => {
@@ -101,8 +237,10 @@ export function useRecorder() {
     if (!recorder || recorder.state !== "recording") return;
     recorder.pause();
     pausedAtRef.current = Date.now();
-    setDurationMs(calculateDuration());
-    setStatus("paused");
+    if (mountedRef.current) {
+      setDurationMs(calculateDuration());
+      setStatus("paused");
+    }
   }, [calculateDuration]);
 
   const resumeRecording = useCallback(() => {
@@ -113,45 +251,99 @@ export function useRecorder() {
     }
     pausedAtRef.current = null;
     recorder.resume();
-    setStatus("recording");
+    if (mountedRef.current) {
+      setStatus("recording");
+    }
   }, []);
 
   const stopRecording = useCallback(() => {
-    const recorder = recorderRef.current;
-    if (!recorder || recorder.state === "inactive") {
-      return Promise.resolve(result);
+    if (stopPromiseRef.current) {
+      return stopPromiseRef.current;
     }
 
-    setDurationMs(calculateDuration());
-    return new Promise<RecorderResult | null>((resolve) => {
+    const recorder = recorderRef.current;
+    if (!recorder || recorder.state === "inactive") {
+      return Promise.resolve(resultRef.current);
+    }
+
+    if (mountedRef.current) {
+      setDurationMs(calculateDuration());
+    }
+
+    const stopPromise = new Promise<RecorderResult | null>((resolve) => {
       stopResolverRef.current = resolve;
-      recorder.stop();
     });
-  }, [calculateDuration, result]);
+    stopPromiseRef.current = stopPromise;
+
+    try {
+      recorder.stop();
+    } catch (caughtError) {
+      const message = caughtError instanceof Error ? caughtError.message : "Unable to stop recording safely.";
+      reportRecorderFailure(message);
+      settleStop(null);
+    }
+
+    return stopPromise;
+  }, [calculateDuration, reportRecorderFailure, settleStop]);
 
   const resetRecording = useCallback(() => {
-    if (result?.url) URL.revokeObjectURL(result.url);
     clearTimer();
-    chunksRef.current = [];
+
+    const recorder = recorderRef.current;
     recorderRef.current = null;
+    if (recorder) {
+      detachRecorderHandlers(recorder);
+      if (recorder.state !== "inactive") {
+        try {
+          recorder.stop();
+        } catch {
+          // Reset intentionally discards any recorder output.
+        }
+      }
+    }
+
+    settleStop(null);
+    revokeCurrentResult();
+    chunksRef.current = [];
+    recorderErrorRef.current = null;
     startedAtRef.current = 0;
     pausedAtRef.current = null;
     pausedDurationRef.current = 0;
-    setDurationMs(0);
-    setResult(null);
-    setError(null);
-    setStatus("idle");
-  }, [clearTimer, result]);
+
+    if (mountedRef.current) {
+      setDurationMs(0);
+      setResult(null);
+      setError(null);
+      setStatus("idle");
+    }
+  }, [clearTimer, revokeCurrentResult, settleStop]);
 
   useEffect(() => {
+    mountedRef.current = true;
+
     return () => {
+      mountedRef.current = false;
       clearTimer();
-      if (recorderRef.current && recorderRef.current.state !== "inactive") {
-        recorderRef.current.stop();
+
+      const recorder = recorderRef.current;
+      recorderRef.current = null;
+      if (recorder) {
+        detachRecorderHandlers(recorder);
+        if (recorder.state !== "inactive") {
+          try {
+            recorder.stop();
+          } catch {
+            // Unmount cleanup must not surface asynchronous recorder failures.
+          }
+        }
       }
-      if (result?.url) URL.revokeObjectURL(result.url);
+
+      settleStop(null);
+      revokeCurrentResult();
+      chunksRef.current = [];
+      recorderErrorRef.current = null;
     };
-  }, [clearTimer, result]);
+  }, [clearTimer, revokeCurrentResult, settleStop]);
 
   return {
     status,

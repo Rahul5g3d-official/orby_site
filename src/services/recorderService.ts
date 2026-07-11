@@ -16,7 +16,7 @@ export function createMediaRecorder(stream: MediaStream): MediaRecorder {
 
 export function buildRecordingFilename(createdAt = new Date()): string {
   const date = createdAt.toISOString().slice(0, 10);
-  return `multicam-recording-${date}.webm`;
+  return `screen-recording-${date}.webm`;
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {
