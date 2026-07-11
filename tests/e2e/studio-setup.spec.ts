@@ -61,10 +61,19 @@ test("the single-webcam setup retains every layout, voice mode, and microphone-t
   await page.getByRole("button", { name: /Studio setup/ }).click();
   const dialog = page.getByRole("dialog", { name: "Studio setup" });
 
-  const sectionNavigation = dialog.getByRole("navigation", { name: "Studio setup sections" });
-  await expect(sectionNavigation.getByRole("link", { name: "Sources", exact: true })).toBeVisible();
-  await expect(sectionNavigation.getByRole("link", { name: "Layout", exact: true })).toBeVisible();
-  await expect(sectionNavigation.getByRole("link", { name: "Voice", exact: true })).toBeVisible();
+  const sectionTabs = dialog.getByRole("tablist", { name: "Studio setup sections" });
+  const sourcesTab = sectionTabs.getByRole("tab", { name: "Sources", exact: true });
+  const layoutTab = sectionTabs.getByRole("tab", { name: "Layout", exact: true });
+  const voiceTab = sectionTabs.getByRole("tab", { name: "Voice", exact: true });
+
+  await expect(sectionTabs.getByRole("tab")).toHaveCount(3);
+  await expect(sourcesTab).toHaveAttribute("aria-selected", "true");
+  await expect(layoutTab).toHaveAttribute("aria-selected", "false");
+  await expect(voiceTab).toHaveAttribute("aria-selected", "false");
+  await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
+  await expect(dialog.getByRole("heading", { name: "Choose what to record", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Choose the composition", exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole("heading", { name: "Choose and test your sound", exact: true })).toHaveCount(0);
 
   await expect(dialog.getByText("Google Meet:", { exact: true })).toBeVisible();
   await expect(dialog.getByText(/Share tab audio/).first()).toBeVisible();
@@ -75,6 +84,11 @@ test("the single-webcam setup retains every layout, voice mode, and microphone-t
   await expect(dialog.getByRole("combobox", { name: "Microphone", exact: true })).toHaveCount(1);
   await expect(dialog.getByRole("button", { name: "Enable microphone", exact: true })).toBeVisible();
 
+  await layoutTab.click();
+  await expect(sourcesTab).toHaveAttribute("aria-selected", "false");
+  await expect(layoutTab).toHaveAttribute("aria-selected", "true");
+  await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
+  await expect(dialog.getByRole("heading", { name: "Choose what to record", exact: true })).toHaveCount(0);
   const layouts = dialog.getByRole("group", { name: "Recording layout" });
   await expect(layouts.getByRole("radio")).toHaveCount(layoutNames.length);
   for (const name of layoutNames) {
@@ -84,6 +98,11 @@ test("the single-webcam setup retains every layout, voice mode, and microphone-t
   await dialog.getByText("Picture-in-picture", { exact: true }).click();
   await expect(layouts.getByRole("radio", { name: /^Picture-in-picture\b/ })).toBeChecked();
 
+  await voiceTab.click();
+  await expect(layoutTab).toHaveAttribute("aria-selected", "false");
+  await expect(voiceTab).toHaveAttribute("aria-selected", "true");
+  await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
+  await expect(dialog.getByRole("heading", { name: "Choose the composition", exact: true })).toHaveCount(0);
   const voiceModes = dialog.getByRole("group", { name: "Voice mode" });
   await expect(voiceModes.getByRole("radio")).toHaveCount(voiceModeNames.length);
   for (const name of voiceModeNames) {
@@ -121,22 +140,35 @@ test("phone, QR, remote-camera, and multi-webcam controls are absent", async ({ 
   await expect(dialog.getByRole("button", { name: /add.*(?:camera|webcam)/i })).toHaveCount(0);
 });
 
-test("changing voice mode requires a fresh recorded and played microphone sample", async ({ page }, testInfo) => {
+test("the microphone test remains available without gating recording readiness", async ({ page }, testInfo) => {
   test.skip(testInfo.project.name === "edge-mobile", "The media pipeline is exercised once in desktop Edge.");
 
   await page.getByRole("button", { name: /Studio setup/ }).click();
   const dialog = page.getByRole("dialog", { name: "Studio setup" });
+  const sectionTabs = dialog.getByRole("tablist", { name: "Studio setup sections" });
 
+  await sectionTabs.getByRole("tab", { name: "Layout", exact: true }).click();
   await dialog.getByText("Face camera only", { exact: true }).click();
+  await sectionTabs.getByRole("tab", { name: "Sources", exact: true }).click();
   await dialog.getByRole("button", { name: "Enable webcam", exact: true }).click();
   await expect(dialog.getByRole("button", { name: "Turn off webcam", exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Enable microphone", exact: true }).click();
   await expect(dialog.getByRole("button", { name: "Turn off microphone", exact: true })).toBeVisible();
 
+  await sectionTabs.getByRole("tab", { name: "Voice", exact: true }).click();
   await dialog.getByText("Broadcast", { exact: true }).click();
   const recordSample = dialog.getByRole("button", { name: "Record sample", exact: true });
   await expect(recordSample).toBeEnabled();
-  await recordSample.click();
+
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Start", exact: true })).toBeEnabled();
+  await expect(page.getByText("Ready to record.", { exact: true })).toBeVisible();
+
+  await page.getByRole("button", { name: /Studio setup/ }).click();
+  await dialog.getByRole("tab", { name: "Voice", exact: true }).click();
+  const reopenedRecordSample = dialog.getByRole("button", { name: "Record sample", exact: true });
+  await expect(reopenedRecordSample).toBeEnabled();
+  await reopenedRecordSample.click();
   const stopSample = dialog.getByRole("button", { name: "Stop sample", exact: true });
   await expect(stopSample).toBeVisible();
   await page.waitForTimeout(600);
@@ -150,13 +182,9 @@ test("changing voice mode requires a fresh recorded and played microphone sample
   });
   await expect(dialog.getByText(/This voice mode has been recorded and played back/)).toBeVisible();
 
+  await dialog.getByText("Natural", { exact: true }).click();
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
+
   await expect(page.getByRole("button", { name: "Start", exact: true })).toBeEnabled();
-
-  await page.getByRole("button", { name: /Studio setup/ }).click();
-  await page.getByRole("dialog", { name: "Studio setup" }).getByText("Natural", { exact: true }).click();
-  await page.getByRole("dialog", { name: "Studio setup" }).getByRole("button", { name: "Done" }).click();
-
-  await expect(page.getByRole("button", { name: "Start", exact: true })).toBeDisabled();
-  await expect(page.getByText(/Record and play a Natural microphone test first\./)).toBeVisible();
+  await expect(page.getByText(/Record and play a Natural microphone test first\./)).toHaveCount(0);
 });

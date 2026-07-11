@@ -36,12 +36,17 @@ test("the core visual flow stays inside desktop and mobile viewports", async ({ 
   }
   await expectNoHorizontalPageOverflow(page);
 
-  await dialog.getByRole("link", { name: "Layout", exact: true }).click();
-  await expect(page).toHaveURL(/\/studio#setup-layout$/);
+  await dialog.getByRole("tab", { name: "Layout", exact: true }).click();
+  await expect(page).toHaveURL(/\/studio$/);
+  await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
   await expect(dialog.getByRole("heading", { name: "Choose the composition", exact: true })).toBeVisible();
-  await dialog.getByRole("link", { name: "Voice", exact: true }).click();
-  await expect(page).toHaveURL(/\/studio#setup-voice$/);
+  await expect(dialog.getByRole("heading", { name: "Choose what to record", exact: true })).toHaveCount(0);
+  await dialog.getByRole("tab", { name: "Voice", exact: true }).click();
+  await expect(page).toHaveURL(/\/studio$/);
+  await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
   await expect(dialog.getByRole("heading", { name: "Choose and test your sound", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("heading", { name: "Choose the composition", exact: true })).toHaveCount(0);
+  await expectNoHorizontalPageOverflow(page);
 
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
   await page

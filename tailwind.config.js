@@ -18,7 +18,7 @@ export default {
         },
       },
       fontFamily: {
-        sans: ["Inter", "Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-family-app)"],
       },
       boxShadow: {
         studio: "0 24px 80px rgba(0, 0, 0, 0.35)",

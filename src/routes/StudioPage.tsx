@@ -14,7 +14,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useBlocker } from "react-router-dom";
 import { AudioLevelMeter } from "../components/studio/AudioLevelMeter";
 import { CameraPreview } from "../components/studio/CameraPreview";
@@ -110,6 +110,14 @@ const audioModeOptions: AudioModeOption[] = [
     name: "Natural",
     description: "Minimal processing for good microphones and quiet rooms.",
   },
+];
+
+type SetupSection = "sources" | "layout" | "voice";
+
+const setupSections: ReadonlyArray<{ id: SetupSection; label: string }> = [
+  { id: "sources", label: "Sources" },
+  { id: "layout", label: "Layout" },
+  { id: "voice", label: "Voice" },
 ];
 
 interface StageVideoProps {
@@ -249,6 +257,7 @@ export function StudioPage() {
   const stopInFlightRef = useRef(false);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
+  const [activeSetupSection, setActiveSetupSection] = useState<SetupSection>("sources");
   const [selectedCameraId, setSelectedCameraId] = useState("");
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState("");
   const [layout, setLayout] = useState<StudioLayout>("screen-only");
@@ -318,8 +327,9 @@ export function StudioPage() {
   );
   const activeSourceCount = [hasScreen, hasCamera].filter(Boolean).length;
   const sourcesLocked = isRecordingActive || isPreparingRecording;
-  const micTestIsCurrent =
-    !hasMicrophone || (Boolean(micTestResult) && micTestResult?.audioMode === audioMode && hasPlayedMicTest);
+  const hasCompletedMicTest = Boolean(
+    hasMicrophone && micTestResult?.audioMode === audioMode && hasPlayedMicTest,
+  );
   const layoutSourcesReady =
     layout === "screen-only"
       ? hasScreen
@@ -339,19 +349,16 @@ export function StudioPage() {
           : "Choose a screen or enable your webcam before recording.";
   } else if (!screenAudioApproved) {
     readinessMessage = "Tab audio is missing. Reselect a browser tab and enable Share tab audio.";
-  } else if (!micTestIsCurrent) {
-    readinessMessage = `Record and play a ${audioModeOptions.find((option) => option.id === audioMode)?.name || "voice mode"} microphone test first.`;
   }
 
   const canStartRecording =
     supported &&
     layoutSourcesReady &&
     screenAudioApproved &&
-    micTestIsCurrent &&
     !isPreparingRecording &&
     !isRecordingActive &&
     recorder.status !== "recording";
-  const setupIssueCount = [!layoutSourcesReady, !screenAudioApproved, !micTestIsCurrent, !supported].filter(Boolean).length;
+  const setupIssueCount = [!layoutSourcesReady, !screenAudioApproved, !supported].filter(Boolean).length;
   const mediaErrors = [screen.error, camera.error, microphone.error, recorder.error, devices.error].filter(
     (message): message is string => Boolean(message),
   );
@@ -407,6 +414,7 @@ export function StudioPage() {
     if (startInFlightRef.current) return;
     if (!canStartRecording) {
       setToast({ type: "error", message: readinessMessage });
+      setActiveSetupSection("sources");
       setIsSetupOpen(true);
       return;
     }
@@ -600,6 +608,28 @@ export function StudioPage() {
           ? "Full display"
           : "Shared source";
 
+  const handleSetupTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentSection: SetupSection) => {
+    const currentIndex = setupSections.findIndex((section) => section.id === currentSection);
+    let nextIndex = currentIndex;
+
+    if (event.key === "ArrowRight" || event.key === "ArrowDown") {
+      nextIndex = (currentIndex + 1) % setupSections.length;
+    } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
+      nextIndex = (currentIndex - 1 + setupSections.length) % setupSections.length;
+    } else if (event.key === "Home") {
+      nextIndex = 0;
+    } else if (event.key === "End") {
+      nextIndex = setupSections.length - 1;
+    } else {
+      return;
+    }
+
+    event.preventDefault();
+    const nextSection = setupSections[nextIndex].id;
+    setActiveSetupSection(nextSection);
+    window.requestAnimationFrame(() => document.getElementById(`setup-tab-${nextSection}`)?.focus());
+  };
+
   return (
     <main className="min-h-[calc(100svh-4rem)]">
       <ToastNotification
@@ -627,7 +657,10 @@ export function StudioPage() {
             aria-haspopup="dialog"
             aria-expanded={isSetupOpen}
             aria-controls="studio-setup-sheet"
-            onClick={() => setIsSetupOpen(true)}
+            onClick={() => {
+              setActiveSetupSection("sources");
+              setIsSetupOpen(true);
+            }}
             className="w-full shrink-0 sm:w-auto"
           >
             Studio setup
@@ -727,9 +760,9 @@ export function StudioPage() {
                 </p>
               </div>
               <div className="rounded-xl border border-studio-border bg-white/[0.03] p-3">
-                <p className="text-xs text-studio-muted">Microphone test</p>
-                <p className={cn("mt-1 text-sm font-medium", micTestIsCurrent ? "text-green-200" : "text-studio-text")}>
-                  {!hasMicrophone ? "Mic off" : micTestIsCurrent ? "Listened" : "Required"}
+                <p className="text-xs text-studio-muted">Microphone check</p>
+                <p className={cn("mt-1 text-sm font-medium", hasCompletedMicTest ? "text-green-200" : "text-studio-text")}>
+                  {!hasMicrophone ? "Mic off" : hasCompletedMicTest ? "Completed" : "Not run (optional)"}
                 </p>
               </div>
             </div>
@@ -763,23 +796,45 @@ export function StudioPage() {
       </div>
 
       <StudioSetupSheet isOpen={isSetupOpen} onClose={() => setIsSetupOpen(false)} locked={sourcesLocked}>
-        <nav aria-label="Studio setup sections" className="grid grid-cols-3 gap-2 rounded-xl border border-studio-border bg-white/[0.03] p-1">
-          {[
-            { href: "#setup-sources", label: "Sources" },
-            { href: "#setup-layout", label: "Layout" },
-            { href: "#setup-voice", label: "Voice" },
-          ].map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className="rounded-lg px-2 py-2 text-center text-xs font-semibold text-studio-muted transition hover:bg-white/[0.06] hover:text-studio-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-cyan"
-            >
-              {item.label}
-            </a>
-          ))}
-        </nav>
+        <div
+          role="tablist"
+          aria-label="Studio setup sections"
+          className="grid grid-cols-3 gap-2 rounded-xl border border-studio-border bg-white/[0.03] p-1"
+        >
+          {setupSections.map((section) => {
+            const isActive = section.id === activeSetupSection;
 
-        <section id="setup-sources" className="scroll-mt-4 rounded-2xl border border-studio-border bg-studio-card/75 p-4">
+            return (
+              <button
+                key={section.id}
+                id={`setup-tab-${section.id}`}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                aria-controls={`setup-panel-${section.id}`}
+                tabIndex={isActive ? 0 : -1}
+                onClick={() => setActiveSetupSection(section.id)}
+                onKeyDown={(event) => handleSetupTabKeyDown(event, section.id)}
+                className={cn(
+                  "rounded-lg px-2 py-2 text-center text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-cyan",
+                  isActive
+                    ? "bg-studio-accent text-white shadow-sm"
+                    : "text-studio-muted hover:bg-white/[0.06] hover:text-studio-text",
+                )}
+              >
+                {section.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <section
+          id="setup-panel-sources"
+          role="tabpanel"
+          aria-labelledby="setup-tab-sources"
+          hidden={activeSetupSection !== "sources"}
+          className="rounded-2xl border border-studio-border bg-studio-card/75 p-4"
+        >
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.15em] text-studio-cyan">01 · Sources</p>
@@ -915,16 +970,30 @@ export function StudioPage() {
           </div>
         </section>
 
-        <section id="setup-layout" className="scroll-mt-4 rounded-2xl border border-studio-border bg-studio-card/75 p-4">
+        <section
+          id="setup-panel-layout"
+          role="tabpanel"
+          aria-labelledby="setup-tab-layout"
+          hidden={activeSetupSection !== "layout"}
+          className="rounded-2xl border border-studio-border bg-studio-card/75 p-4"
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-studio-cyan">02 · Layout</p>
           <h3 className="mb-4 mt-1 text-base font-semibold text-studio-text">Choose the composition</h3>
           <LayoutSelector layouts={layoutOptions} value={layout} onChange={setLayout} disabled={sourcesLocked} />
         </section>
 
-        <section id="setup-voice" className="scroll-mt-4 rounded-2xl border border-studio-border bg-studio-card/75 p-4">
+        <section
+          id="setup-panel-voice"
+          role="tabpanel"
+          aria-labelledby="setup-tab-voice"
+          hidden={activeSetupSection !== "voice"}
+          className="rounded-2xl border border-studio-border bg-studio-card/75 p-4"
+        >
           <p className="text-xs font-semibold uppercase tracking-[0.15em] text-studio-cyan">03 · Voice</p>
           <h3 className="mt-1 text-base font-semibold text-studio-text">Choose and test your sound</h3>
-          <p className="mt-1 text-xs leading-5 text-studio-muted">Voice modes affect only your microphone; captured tab audio stays natural.</p>
+          <p className="mt-1 text-xs leading-5 text-studio-muted">
+            Voice modes affect only your microphone; the check below is optional and captured tab audio stays natural.
+          </p>
           <div className="mt-4 grid gap-5">
             <AudioLevelMeter level={microphone.level} />
             <VoiceModeSelector
@@ -945,7 +1014,7 @@ export function StudioPage() {
                 if (result.audioMode === audioMode) setHasPlayedMicTest(true);
               }}
             />
-            {hasMicrophone && micTestIsCurrent ? (
+            {hasCompletedMicTest ? (
               <div className="flex items-start gap-2 rounded-xl border border-studio-success/30 bg-studio-success/10 p-3 text-xs leading-5 text-green-100">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
                 This voice mode has been recorded and played back. It is ready for the final recording.

@@ -9,6 +9,7 @@ const routes = [
 async function expectRoute(page: Page, navName: string, heading: string) {
   await expect(page).toHaveURL(new RegExp(`${navName === "Home" ? "/" : `/${navName.toLowerCase()}`}$`));
   await expect(page.getByRole("heading", { level: 1, name: heading, exact: true })).toBeVisible();
+  await expect(page.getByRole("contentinfo")).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Primary navigation" }).getByRole("link", {
       name: navName,

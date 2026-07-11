@@ -3,8 +3,9 @@
 @tailwind utilities;
 
 :root {
+  --font-family-app: Inter, Manrope, ui-sans-serif, system-ui, sans-serif;
+  --font-size-app: 16px;
   color-scheme: dark;
-  font-family: Inter, Manrope, ui-sans-serif, system-ui, sans-serif;
   background: #0b1020;
 }
 
@@ -14,6 +15,8 @@
 
 html {
   min-width: 320px;
+  font-family: var(--font-family-app);
+  font-size: var(--font-size-app);
   background: #0b1020;
 }
 
@@ -21,6 +24,8 @@ body {
   min-width: 320px;
   min-height: 100svh;
   margin: 0;
+  font-family: inherit;
+  font-size: inherit;
   background:
     linear-gradient(180deg, rgba(34, 211, 238, 0.05), transparent 22rem),
     #0b1020;

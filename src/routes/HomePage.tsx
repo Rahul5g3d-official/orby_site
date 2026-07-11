@@ -23,8 +23,8 @@ const features = [
   },
   {
     icon: Headphones,
-    title: "Voice mode testing",
-    description: "Choose a voice mode, record a short microphone sample, and listen back before the real recording.",
+    title: "Optional voice preview",
+    description: "Choose a voice mode and, if you want, record a short sample to hear it before the real recording.",
   },
   {
     icon: Grid2X2,
@@ -40,7 +40,7 @@ const features = [
 
 const steps = [
   "Choose screen, camera, and microphone sources.",
-  "Choose a voice mode and play back a short microphone test.",
+  "Choose a voice mode, then preview it with a short microphone test if you want.",
   "Select a layout, record, review, and save your video locally.",
 ];
 
@@ -64,8 +64,8 @@ export function HomePage() {
               Screen Recorder
             </h1>
             <p className="mt-6 max-w-xl text-base leading-7 text-studio-muted sm:text-lg">
-              Record a browser tab with its audio, add one webcam, test your microphone processing, and compose everything
-              into one downloadable video directly in the browser.
+              Record a browser tab with its audio, add one webcam, optionally preview your microphone processing, and
+              compose everything into one downloadable video directly in the browser.
             </p>
             <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
               <Link
