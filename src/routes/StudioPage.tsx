@@ -13,13 +13,7 @@ import {
   Volume2,
   VolumeX,
 } from "lucide-react";
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
+import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useBlocker } from "react-router-dom";
 import { AudioLevelMeter } from "../components/studio/AudioLevelMeter";
 import { DeviceSelector } from "../components/studio/DeviceSelector";
@@ -42,29 +36,18 @@ import type { MicrophoneTestResult } from "../hooks/useMicrophoneTest";
 import { useRecorder } from "../hooks/useRecorder";
 import { useScreenCapture } from "../hooks/useScreenCapture";
 import { supportsRecordingApis } from "../services/mediaService";
-import {
-  buildRecordingFilename,
-  downloadBlob,
-} from "../services/recorderService";
+import { buildRecordingFilename, downloadBlob } from "../services/recorderService";
 import { saveRecording } from "../services/storageService";
-import type {
-  AudioMode,
-  AudioModeOption,
-  LayoutOption,
-  StudioLayout,
-} from "../types/media";
-import {
-  createCanvasComposition,
-  type CanvasComposition,
-} from "../utils/canvasComposer";
+import type { AudioMode, AudioModeOption, LayoutOption, StudioLayout } from "../types/media";
+import { createCanvasComposition, type CanvasComposition } from "../utils/canvasComposer";
 import { cn } from "../utils/cn";
+
 
 const layoutOptions: LayoutOption[] = [
   {
     id: "screen-only",
     name: "Screen only",
-    description:
-      "Direct tab capture for reliable meeting recordings, including when this page is in the background.",
+    description: "Direct tab capture for reliable meeting recordings, including when this page is in the background.",
   },
   {
     id: "camera-only",
@@ -74,8 +57,7 @@ const layoutOptions: LayoutOption[] = [
   {
     id: "screen-bubble",
     name: "Screen + face bubble",
-    description:
-      "Screen capture with the selected webcam in a rounded corner overlay.",
+    description: "Screen capture with the selected webcam in a rounded corner overlay.",
   },
   {
     id: "screen-side",
@@ -85,19 +67,12 @@ const layoutOptions: LayoutOption[] = [
   {
     id: "grid",
     name: "Two-source grid",
-    description:
-      "Arrange the shared screen and one webcam in a balanced two-panel grid.",
+    description: "Arrange the shared screen and one webcam in a balanced two-panel grid.",
   },
   {
     id: "pip",
     name: "Picture-in-picture",
     description: "Screen capture with a larger corner webcam window.",
-  },
-  {
-    id: "custom",
-    name: "Custom top-left",
-    description:
-      "Place the one selected webcam at the top-left of the shared screen.",
   },
 ];
 
@@ -158,11 +133,7 @@ function StageVideo({ stream, className, fit = "cover" }: StageVideoProps) {
       autoPlay
       muted
       playsInline
-      className={cn(
-        "h-full w-full bg-black",
-        fit === "contain" ? "object-contain" : "object-cover",
-        className,
-      )}
+      className={cn("h-full w-full bg-black", fit === "contain" ? "object-contain" : "object-cover", className)}
     />
   );
 }
@@ -175,41 +146,18 @@ interface LiveStageProps {
 
 function LiveStage({ layout, screenStream, cameraStream }: LiveStageProps) {
   const sources = [
-    screenStream
-      ? {
-          id: "screen",
-          label: "Screen",
-          stream: screenStream,
-          fit: "contain" as const,
-        }
-      : null,
-    cameraStream
-      ? {
-          id: "webcam",
-          label: "Webcam",
-          stream: cameraStream,
-          fit: "cover" as const,
-        }
-      : null,
+    screenStream ? { id: "screen", label: "Screen", stream: screenStream, fit: "contain" as const } : null,
+    cameraStream ? { id: "webcam", label: "Webcam", stream: cameraStream, fit: "cover" as const } : null,
   ].filter(
-    (
-      source,
-    ): source is {
-      id: string;
-      label: string;
-      stream: MediaStream;
-      fit: "cover" | "contain";
-    } => Boolean(source),
+    (source): source is { id: string; label: string; stream: MediaStream; fit: "cover" | "contain" } =>
+      Boolean(source),
   );
 
   if (layout === "grid") {
     return (
       <div className="grid h-full w-full grid-cols-1 gap-2 p-2 sm:grid-cols-2 sm:gap-3 sm:p-3">
         {sources.length === 0 ? (
-          <EmptyState
-            title="No sources selected"
-            className="col-span-full h-full"
-          />
+          <EmptyState title="No sources selected" className="col-span-full h-full" />
         ) : (
           sources.map((source) => (
             <div
@@ -250,11 +198,7 @@ function LiveStage({ layout, screenStream, cameraStream }: LiveStageProps) {
           )}
         </div>
         <div className="min-h-28 overflow-hidden rounded-xl border border-studio-border bg-black">
-          {cameraStream ? (
-            <StageVideo stream={cameraStream} />
-          ) : (
-            <EmptyState title="Enable webcam" className="h-full" />
-          )}
+          {cameraStream ? <StageVideo stream={cameraStream} /> : <EmptyState title="Enable webcam" className="h-full" />}
         </div>
       </div>
     );
@@ -265,15 +209,9 @@ function LiveStage({ layout, screenStream, cameraStream }: LiveStageProps) {
       {screenStream ? (
         <StageVideo stream={screenStream} fit="contain" />
       ) : (
-        <EmptyState
-          title="Select a screen source"
-          className="m-4 h-[calc(100%-2rem)]"
-        />
+        <EmptyState title="Select a screen source" className="m-4 h-[calc(100%-2rem)]" />
       )}
-      {(layout === "screen-bubble" ||
-        layout === "pip" ||
-        layout === "custom") &&
-      cameraStream ? (
+      {(layout === "screen-bubble" || layout === "pip" || layout === "custom") && cameraStream ? (
         <div
           className={cn(
             "absolute aspect-video overflow-hidden rounded-xl border border-white/30 bg-black shadow-studio",
@@ -291,9 +229,7 @@ function LiveStage({ layout, screenStream, cameraStream }: LiveStageProps) {
 }
 
 function hasLiveVideo(stream: MediaStream | null): boolean {
-  return Boolean(
-    stream?.getVideoTracks().some((track) => track.readyState === "live"),
-  );
+  return Boolean(stream?.getVideoTracks().some((track) => track.readyState === "live"));
 }
 
 export function StudioPage() {
@@ -312,48 +248,34 @@ export function StudioPage() {
   const stopInFlightRef = useRef(false);
 
   const [isSetupOpen, setIsSetupOpen] = useState(false);
-  const [activeSetupSection, setActiveSetupSection] =
-    useState<SetupSection>("sources");
+  const [activeSetupSection, setActiveSetupSection] = useState<SetupSection>("sources");
   const [selectedCameraId, setSelectedCameraId] = useState("");
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState("");
   const [layout, setLayout] = useState<StudioLayout>("screen-only");
   const [audioMode, setAudioMode] = useState<AudioMode>("voice-boost");
   const [isPreparingRecording, setIsPreparingRecording] = useState(false);
   const [allowSilentScreen, setAllowSilentScreen] = useState(false);
-  const [micTestResult, setMicTestResult] =
-    useState<MicrophoneTestResult | null>(null);
+  const [micTestResult, setMicTestResult] = useState<MicrophoneTestResult | null>(null);
   const [hasPlayedMicTest, setHasPlayedMicTest] = useState(false);
   const [hasPlayedPreview, setHasPlayedPreview] = useState(false);
   const [isSavedToLibrary, setIsSavedToLibrary] = useState(false);
   const [isSavingRecording, setIsSavingRecording] = useState(false);
-  const [toast, setToast] = useState<{
-    type: "info" | "success" | "error";
-    message: string;
-  } | null>(null);
+  const [toast, setToast] = useState<{ type: "info" | "success" | "error"; message: string } | null>(null);
   const [dismissedErrors, setDismissedErrors] = useState<string[]>([]);
   const startInFlightRef = useRef(false);
-  const isRecordingActive =
-    recorder.status === "recording" || recorder.status === "paused";
-  const navigationBlocker = useBlocker(
-    isRecordingActive || isPreparingRecording,
-  );
+  const isRecordingActive = recorder.status === "recording" || recorder.status === "paused";
+  const navigationBlocker = useBlocker(isRecordingActive || isPreparingRecording);
 
   useEffect(() => {
     if (devices.isLoading) return;
-    const selectedStillExists = devices.cameras.some(
-      (device) => device.deviceId === selectedCameraId,
-    );
-    if (!selectedStillExists)
-      setSelectedCameraId(devices.cameras[0]?.deviceId || "");
+    const selectedStillExists = devices.cameras.some((device) => device.deviceId === selectedCameraId);
+    if (!selectedStillExists) setSelectedCameraId(devices.cameras[0]?.deviceId || "");
   }, [devices.cameras, devices.isLoading, selectedCameraId]);
 
   useEffect(() => {
     if (devices.isLoading) return;
-    const selectedStillExists = devices.microphones.some(
-      (device) => device.deviceId === selectedMicrophoneId,
-    );
-    if (!selectedStillExists)
-      setSelectedMicrophoneId(devices.microphones[0]?.deviceId || "");
+    const selectedStillExists = devices.microphones.some((device) => device.deviceId === selectedMicrophoneId);
+    if (!selectedStillExists) setSelectedMicrophoneId(devices.microphones[0]?.deviceId || "");
   }, [devices.isLoading, devices.microphones, selectedMicrophoneId]);
 
   useEffect(() => {
@@ -364,11 +286,7 @@ export function StudioPage() {
 
   useEffect(() => {
     if (navigationBlocker.state !== "blocked") return;
-    setToast({
-      type: "error",
-      message:
-        "Wait for setup to finish or stop the recording before leaving the studio.",
-    });
+    setToast({ type: "error", message: "Wait for setup to finish or stop the recording before leaving the studio." });
     navigationBlocker.reset();
   }, [navigationBlocker]);
 
@@ -396,9 +314,7 @@ export function StudioPage() {
   const hasScreen = hasLiveVideo(screen.stream);
   const hasCamera = hasLiveVideo(camera.stream);
   const hasMicrophone = Boolean(
-    microphone.stream
-      ?.getAudioTracks()
-      .some((track) => track.readyState === "live"),
+    microphone.stream?.getAudioTracks().some((track) => track.readyState === "live"),
   );
   const activeSourceCount = [hasScreen, hasCamera].filter(Boolean).length;
   const sourcesLocked = isRecordingActive || isPreparingRecording;
@@ -411,13 +327,10 @@ export function StudioPage() {
       : layout === "camera-only"
         ? hasCamera
         : activeSourceCount > 0;
-  const screenAudioApproved =
-    !hasScreen || screen.hasDisplayAudio || allowSilentScreen;
+  const screenAudioApproved = !hasScreen || screen.hasDisplayAudio || allowSilentScreen;
 
   let readinessMessage = "Ready to record.";
-  if (!supported)
-    readinessMessage =
-      "This browser is missing one or more required recording APIs.";
+  if (!supported) readinessMessage = "This browser is missing one or more required recording APIs.";
   else if (!layoutSourcesReady) {
     readinessMessage =
       layout === "screen-only"
@@ -426,8 +339,7 @@ export function StudioPage() {
           ? "Enable the one webcam you want to record."
           : "Choose a screen or enable your webcam before recording.";
   } else if (!screenAudioApproved) {
-    readinessMessage =
-      "Tab audio is missing. Reselect a browser tab and enable Share tab audio.";
+    readinessMessage = "Tab audio is missing. Reselect a browser tab and enable Share tab audio.";
   }
 
   const canStartRecording =
@@ -437,21 +349,12 @@ export function StudioPage() {
     !isPreparingRecording &&
     !isRecordingActive &&
     recorder.status !== "recording";
-  const setupIssueCount = [
-    !layoutSourcesReady,
-    !screenAudioApproved,
-    !supported,
-  ].filter(Boolean).length;
-  const mediaErrors = [
-    screen.error,
-    camera.error,
-    microphone.error,
-    recorder.error,
-    devices.error,
-  ].filter((message): message is string => Boolean(message));
+  const setupIssueCount = [!layoutSourcesReady, !screenAudioApproved, !supported].filter(Boolean).length;
+  const mediaErrors = [screen.error, camera.error, microphone.error, recorder.error, devices.error].filter(
+    (message): message is string => Boolean(message),
+  );
   const combinedError = mediaErrors[0] || null;
-  const visibleCombinedError =
-    mediaErrors.find((message) => !dismissedErrors.includes(message)) || null;
+  const visibleCombinedError = mediaErrors.find((message) => !dismissedErrors.includes(message)) || null;
 
   useEffect(() => {
     if (!combinedError && dismissedErrors.length > 0) setDismissedErrors([]);
@@ -465,9 +368,7 @@ export function StudioPage() {
     const nextStream = await screen.startScreen();
     if (!nextStream) return;
     setAllowSilentScreen(false);
-    const hasAudio = nextStream
-      .getAudioTracks()
-      .some((track) => track.readyState === "live");
+    const hasAudio = nextStream.getAudioTracks().some((track) => track.readyState === "live");
     setToast({
       type: hasAudio ? "success" : "error",
       message: hasAudio
@@ -543,10 +444,7 @@ export function StudioPage() {
       compositionRef.current = null;
       setToast({
         type: "error",
-        message:
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to prepare the recording.",
+        message: caughtError instanceof Error ? caughtError.message : "Unable to prepare the recording.",
       });
     } finally {
       startInFlightRef.current = false;
@@ -555,9 +453,7 @@ export function StudioPage() {
   };
 
   const handleStopRecording = useCallback(
-    async (
-      endReason: "sharing" | "audio" | "camera" | "microphone" | null = null,
-    ) => {
+    async (endReason: "sharing" | "audio" | "camera" | "microphone" | null = null) => {
       if (stopInFlightRef.current) return;
       stopInFlightRef.current = true;
 
@@ -577,7 +473,7 @@ export function StudioPage() {
                   ? "The webcam disconnected, so the recording was stopped safely."
                   : endReason === "microphone"
                     ? "The microphone disconnected, so the recording was stopped safely."
-                    : "Recording ready. Play the preview before saving or downloading.",
+                : "Recording ready. Play the preview before saving or downloading.",
         });
       } finally {
         compositionRef.current?.stop();
@@ -592,10 +488,7 @@ export function StudioPage() {
     if (isRecordingActive) {
       if (screen.stream) {
         screenWasLiveDuringRecordingRef.current = true;
-      } else if (
-        screenWasLiveDuringRecordingRef.current &&
-        !stopInFlightRef.current
-      ) {
+      } else if (screenWasLiveDuringRecordingRef.current && !stopInFlightRef.current) {
         screenWasLiveDuringRecordingRef.current = false;
         void handleStopRecording("sharing");
       }
@@ -609,34 +502,21 @@ export function StudioPage() {
     if (isRecordingActive && hasScreen && !allowSilentScreen) {
       if (screen.hasDisplayAudio) {
         screenAudioWasLiveDuringRecordingRef.current = true;
-      } else if (
-        screenAudioWasLiveDuringRecordingRef.current &&
-        !stopInFlightRef.current
-      ) {
+      } else if (screenAudioWasLiveDuringRecordingRef.current && !stopInFlightRef.current) {
         screenAudioWasLiveDuringRecordingRef.current = false;
         void handleStopRecording("audio");
       }
       return;
     }
 
-    if (!isRecordingActive)
-      screenAudioWasLiveDuringRecordingRef.current = false;
-  }, [
-    allowSilentScreen,
-    handleStopRecording,
-    hasScreen,
-    isRecordingActive,
-    screen.hasDisplayAudio,
-  ]);
+    if (!isRecordingActive) screenAudioWasLiveDuringRecordingRef.current = false;
+  }, [allowSilentScreen, handleStopRecording, hasScreen, isRecordingActive, screen.hasDisplayAudio]);
 
   useEffect(() => {
     if (isRecordingActive) {
       if (camera.stream) {
         cameraWasLiveDuringRecordingRef.current = true;
-      } else if (
-        cameraWasLiveDuringRecordingRef.current &&
-        !stopInFlightRef.current
-      ) {
+      } else if (cameraWasLiveDuringRecordingRef.current && !stopInFlightRef.current) {
         cameraWasLiveDuringRecordingRef.current = false;
         void handleStopRecording("camera");
       }
@@ -650,10 +530,7 @@ export function StudioPage() {
     if (isRecordingActive) {
       if (microphone.stream) {
         microphoneWasLiveDuringRecordingRef.current = true;
-      } else if (
-        microphoneWasLiveDuringRecordingRef.current &&
-        !stopInFlightRef.current
-      ) {
+      } else if (microphoneWasLiveDuringRecordingRef.current && !stopInFlightRef.current) {
         microphoneWasLiveDuringRecordingRef.current = false;
         void handleStopRecording("microphone");
       }
@@ -676,6 +553,7 @@ export function StudioPage() {
         createdAt: createdAt.toISOString(),
         durationMs: recorder.result.durationMs,
         size: recorder.result.blob.size,
+        type: recorder.result.blob.type,
         blob: recorder.result.blob,
       });
       setIsSavedToLibrary(true);
@@ -683,10 +561,7 @@ export function StudioPage() {
     } catch (caughtError) {
       setToast({
         type: "error",
-        message:
-          caughtError instanceof Error
-            ? caughtError.message
-            : "Unable to save recording locally.",
+        message: caughtError instanceof Error ? caughtError.message : "Unable to save recording locally.",
       });
     } finally {
       setIsSavingRecording(false);
@@ -724,20 +599,14 @@ export function StudioPage() {
           ? "Full display"
           : "Shared source";
 
-  const handleSetupTabKeyDown = (
-    event: KeyboardEvent<HTMLButtonElement>,
-    currentSection: SetupSection,
-  ) => {
-    const currentIndex = setupSections.findIndex(
-      (section) => section.id === currentSection,
-    );
+  const handleSetupTabKeyDown = (event: KeyboardEvent<HTMLButtonElement>, currentSection: SetupSection) => {
+    const currentIndex = setupSections.findIndex((section) => section.id === currentSection);
     let nextIndex = currentIndex;
 
     if (event.key === "ArrowRight" || event.key === "ArrowDown") {
       nextIndex = (currentIndex + 1) % setupSections.length;
     } else if (event.key === "ArrowLeft" || event.key === "ArrowUp") {
-      nextIndex =
-        (currentIndex - 1 + setupSections.length) % setupSections.length;
+      nextIndex = (currentIndex - 1 + setupSections.length) % setupSections.length;
     } else if (event.key === "Home") {
       nextIndex = 0;
     } else if (event.key === "End") {
@@ -749,9 +618,7 @@ export function StudioPage() {
     event.preventDefault();
     const nextSection = setupSections[nextIndex].id;
     setActiveSetupSection(nextSection);
-    window.requestAnimationFrame(() =>
-      document.getElementById(`setup-tab-${nextSection}`)?.focus(),
-    );
+    window.requestAnimationFrame(() => document.getElementById(`setup-tab-${nextSection}`)?.focus());
   };
 
   return (
@@ -761,8 +628,7 @@ export function StudioPage() {
         message={toast?.message || visibleCombinedError}
         onDismiss={() => {
           if (toast) setToast(null);
-          else if (visibleCombinedError)
-            setDismissedErrors((current) => [...current, visibleCombinedError]);
+          else if (visibleCombinedError) setDismissedErrors((current) => [...current, visibleCombinedError]);
         }}
       />
 
@@ -785,14 +651,10 @@ export function StudioPage() {
             <span
               className={cn(
                 "ml-1 rounded-full px-2 py-0.5 text-xs",
-                setupIssueCount === 0
-                  ? "bg-studio-success/15 text-green-200"
-                  : "bg-amber-400/15 text-amber-100",
+                setupIssueCount === 0 ? "bg-studio-success/15 text-green-200" : "bg-amber-400/15 text-amber-100",
               )}
             >
-              {setupIssueCount === 0
-                ? "Ready"
-                : `${setupIssueCount} ${setupIssueCount === 1 ? "issue" : "issues"}`}
+              {setupIssueCount === 0 ? "Ready" : `${setupIssueCount} ${setupIssueCount === 1 ? "issue" : "issues"}`}
             </span>
           </Button>
         </section>
@@ -800,28 +662,18 @@ export function StudioPage() {
         <Card className="overflow-hidden rounded-2xl">
           <div className="flex flex-col gap-3 border-b border-studio-border p-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-base font-semibold text-studio-text">
-                Live stage
-              </h2>
+              <h2 className="text-base font-semibold text-studio-text">Live stage</h2>
               <p className="mt-1 text-sm text-studio-muted">
-                {layoutOptions.find((option) => option.id === layout)?.name} ·{" "}
-                {activeSourceCount} visual{" "}
-                {activeSourceCount === 1 ? "source" : "sources"}
+                {layoutOptions.find((option) => option.id === layout)?.name} · {activeSourceCount} visual {activeSourceCount === 1 ? "source" : "sources"}
               </p>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <Timer durationMs={recorder.durationMs} />
-              <StatusBadge status={recorderBadgeStatus}>
-                {recorder.status}
-              </StatusBadge>
+              <StatusBadge status={recorderBadgeStatus}>{recorder.status}</StatusBadge>
             </div>
           </div>
           <div className="aspect-video max-h-[calc(100svh-15rem)] min-h-56 bg-black sm:min-h-72">
-            <LiveStage
-              layout={layout}
-              screenStream={screen.stream}
-              cameraStream={camera.stream}
-            />
+            <LiveStage layout={layout} screenStream={screen.stream} cameraStream={camera.stream} />
           </div>
         </Card>
 
@@ -871,13 +723,10 @@ export function StudioPage() {
             onDiscard={handleResetRecording}
           />
         ) : null}
+
       </div>
 
-      <StudioSetupSheet
-        isOpen={isSetupOpen}
-        onClose={() => setIsSetupOpen(false)}
-        locked={sourcesLocked}
-      >
+      <StudioSetupSheet isOpen={isSetupOpen} onClose={() => setIsSetupOpen(false)} locked={sourcesLocked}>
         <div
           role="tablist"
           aria-label="Studio setup sections"
@@ -919,12 +768,7 @@ export function StudioPage() {
         >
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.15em] text-studio-cyan">
-                01 · Sources
-              </p>
-              <h3 className="mt-1 text-base font-semibold text-studio-text">
-                Choose what to record
-              </h3>
+              <h3 className="mt-1 text-base font-semibold text-studio-text">Choose what to record</h3>
             </div>
             <Button
               variant="ghost"
@@ -937,20 +781,13 @@ export function StudioPage() {
             </Button>
           </div>
 
-          <div className="rounded-xl border border-studio-cyan/25 bg-studio-cyan/[0.07] p-3 text-sm leading-6 text-cyan-50">
-            <strong>Google Meet:</strong> choose <strong>Chrome Tab</strong>,
-            select the Meet tab, and turn on <strong>Share tab audio</strong>.
-          </div>
+
 
           <div className="mt-5 grid gap-5">
             <div>
               <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-studio-text">
-                  Tab, window, or screen
-                </span>
-                {screen.stream ? (
-                  <StatusBadge status="connected">{surfaceLabel}</StatusBadge>
-                ) : null}
+                <span className="text-sm font-medium text-studio-text">Tab, window, or screen</span>
+                {screen.stream ? <StatusBadge status="connected">{surfaceLabel}</StatusBadge> : null}
               </div>
               <Button
                 variant="secondary"
@@ -960,9 +797,7 @@ export function StudioPage() {
                 onClick={() => void handleSelectScreen()}
                 className="w-full"
               >
-                {screen.stream
-                  ? "Change shared source"
-                  : "Choose shared source"}
+                {screen.stream ? "Change shared source" : "Choose shared source"}
               </Button>
               {screen.stream ? (
                 <Button
@@ -980,19 +815,13 @@ export function StudioPage() {
                 screen.hasDisplayAudio ? (
                   <div className="mt-3 flex items-start gap-2 rounded-xl border border-studio-success/30 bg-studio-success/10 p-3 text-xs leading-5 text-green-100">
                     <Volume2 className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>
-                      <strong>Tab audio included.</strong> Shared sound will be
-                      mixed into the recording.
-                    </span>
+                    <span><strong>Tab audio included.</strong> Shared sound will be mixed into the recording.</span>
                   </div>
                 ) : (
                   <div className="mt-3 rounded-xl border border-amber-400/35 bg-amber-400/10 p-3 text-xs leading-5 text-amber-100">
                     <div className="flex items-start gap-2">
                       <VolumeX className="mt-0.5 h-4 w-4 shrink-0" />
-                      <span>
-                        <strong>No shared audio.</strong> Reselect a browser tab
-                        and enable Share tab audio.
-                      </span>
+                      <span><strong>No shared audio.</strong> Reselect a browser tab and enable Share tab audio.</span>
                     </div>
                     {!allowSilentScreen ? (
                       <button
@@ -1004,9 +833,7 @@ export function StudioPage() {
                         Continue without tab audio
                       </button>
                     ) : (
-                      <p className="mt-2 font-medium">
-                        Silent shared-source recording approved.
-                      </p>
+                      <p className="mt-2 font-medium">Silent shared-source recording approved.</p>
                     )}
                   </div>
                 )
@@ -1018,25 +845,16 @@ export function StudioPage() {
                 label="One webcam"
                 devices={devices.cameras}
                 value={selectedCameraId}
-                placeholder={
-                  devices.isLoading ? "Loading webcams" : "Default webcam"
-                }
+                placeholder={devices.isLoading ? "Loading webcams" : "Default webcam"}
                 disabled={sourcesLocked}
                 onChange={(deviceId) => {
                   setSelectedCameraId(deviceId);
-                  if (camera.stream)
-                    void camera.startCamera(deviceId || undefined);
+                  if (camera.stream) void camera.startCamera(deviceId || undefined);
                 }}
               />
               <Button
                 variant="secondary"
-                icon={
-                  camera.stream ? (
-                    <VideoOff className="h-4 w-4" />
-                  ) : (
-                    <Camera className="h-4 w-4" />
-                  )
-                }
+                icon={camera.stream ? <VideoOff className="h-4 w-4" /> : <Camera className="h-4 w-4" />}
                 isLoading={camera.isLoading}
                 disabled={sourcesLocked}
                 onClick={() => {
@@ -1054,29 +872,18 @@ export function StudioPage() {
                 label="Microphone"
                 devices={devices.microphones}
                 value={selectedMicrophoneId}
-                placeholder={
-                  devices.isLoading
-                    ? "Loading microphones"
-                    : "Default microphone"
-                }
+                placeholder={devices.isLoading ? "Loading microphones" : "Default microphone"}
                 disabled={sourcesLocked}
                 onChange={(deviceId) => {
                   setSelectedMicrophoneId(deviceId);
                   setMicTestResult(null);
                   setHasPlayedMicTest(false);
-                  if (microphone.stream)
-                    void microphone.startMicrophone(deviceId || undefined);
+                  if (microphone.stream) void microphone.startMicrophone(deviceId || undefined);
                 }}
               />
               <Button
                 variant="secondary"
-                icon={
-                  microphone.stream ? (
-                    <MicOff className="h-4 w-4" />
-                  ) : (
-                    <Mic2 className="h-4 w-4" />
-                  )
-                }
+                icon={microphone.stream ? <MicOff className="h-4 w-4" /> : <Mic2 className="h-4 w-4" />}
                 isLoading={microphone.isLoading}
                 disabled={sourcesLocked}
                 onClick={() => {
@@ -1085,9 +892,7 @@ export function StudioPage() {
                 }}
                 className="w-full"
               >
-                {microphone.stream
-                  ? "Turn off microphone"
-                  : "Enable microphone"}
+                {microphone.stream ? "Turn off microphone" : "Enable microphone"}
               </Button>
             </div>
           </div>
@@ -1100,18 +905,8 @@ export function StudioPage() {
           hidden={activeSetupSection !== "layout"}
           className="rounded-2xl border border-studio-border bg-studio-card/75 p-4"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-studio-cyan">
-            02 · Layout
-          </p>
-          <h3 className="mb-4 mt-1 text-base font-semibold text-studio-text">
-            Choose the composition
-          </h3>
-          <LayoutSelector
-            layouts={layoutOptions}
-            value={layout}
-            onChange={setLayout}
-            disabled={sourcesLocked}
-          />
+          <h3 className="mb-4 mt-1 text-base font-semibold text-studio-text">Choose the composition</h3>
+          <LayoutSelector layouts={layoutOptions} value={layout} onChange={setLayout} disabled={sourcesLocked} />
         </section>
 
         <section
@@ -1121,24 +916,16 @@ export function StudioPage() {
           hidden={activeSetupSection !== "voice"}
           className="rounded-2xl border border-studio-border bg-studio-card/75 p-4"
         >
-          <p className="text-xs font-semibold uppercase tracking-[0.15em] text-studio-cyan">
-            03 · Voice
-          </p>
-          <h3 className="mt-1 text-base font-semibold text-studio-text">
-            Choose and test your sound
-          </h3>
-          <p className="mt-1 text-xs leading-5 text-studio-muted">
-            Voice modes affect only your microphone; the check below is optional
-            and captured tab audio stays natural.
-          </p>
+          <h3 className="mt-1 text-base font-semibold text-studio-text">Voice mode</h3>
           <div className="mt-4 grid gap-5">
-            <AudioLevelMeter level={microphone.level} />
+
             <VoiceModeSelector
               options={audioModeOptions}
               value={audioMode}
               onChange={handleAudioModeChange}
               disabled={sourcesLocked}
             />
+                        <AudioLevelMeter level={microphone.level} />
             <MicrophoneVoiceTest
               microphoneStream={microphone.stream}
               audioMode={audioMode}
@@ -1154,8 +941,7 @@ export function StudioPage() {
             {hasCompletedMicTest ? (
               <div className="flex items-start gap-2 rounded-xl border border-studio-success/30 bg-studio-success/10 p-3 text-xs leading-5 text-green-100">
                 <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0" />
-                This voice mode has been recorded and played back. It is ready
-                for the final recording.
+                This voice mode has been recorded and played back. It is ready for the final recording.
               </div>
             ) : null}
           </div>
@@ -1164,8 +950,7 @@ export function StudioPage() {
         {sourcesLocked ? (
           <div className="flex items-start gap-2 rounded-xl border border-studio-border bg-white/[0.03] p-3 text-xs leading-5 text-studio-muted">
             <Lock className="mt-0.5 h-4 w-4 shrink-0" />
-            Source, layout, and voice controls remain locked until the current
-            recording stops.
+            Source, layout, and voice controls remain locked until the current recording stops.
           </div>
         ) : null}
       </StudioSetupSheet>

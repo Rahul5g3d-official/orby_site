@@ -36,15 +36,6 @@ export function VoiceModeSelector({
 
   return (
     <fieldset disabled={disabled} aria-describedby={descriptionId}>
-      <legend className="text-sm font-semibold text-studio-text">
-        Voice mode
-      </legend>
-      <p
-        id={descriptionId}
-        className="mb-3 mt-1 text-xs leading-5 text-studio-muted"
-      >
-        Applies to your microphone in the final recording.
-      </p>
       <div className="grid gap-2">
         {options.map((option) => {
           const Icon = icons[option.id];

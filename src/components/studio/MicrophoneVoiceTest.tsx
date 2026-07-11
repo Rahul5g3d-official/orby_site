@@ -88,21 +88,14 @@ export function MicrophoneVoiceTest({
           <Headphones className="h-5 w-5" aria-hidden="true" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex items-center justify-between gap-2">
             <h3 id={titleId} className="text-sm font-semibold text-studio-text">
               Test your microphone
             </h3>
-            <span className="rounded-full border border-studio-border bg-white/[0.05] px-2 py-0.5 text-[11px] font-medium text-studio-muted">
-              Optional
-            </span>
             <span className="rounded-full border border-studio-cyan/20 bg-studio-cyan/10 px-2 py-0.5 text-[11px] font-medium text-studio-cyan">
               {MODE_LABELS[audioMode]}
             </span>
           </div>
-          <p className="mt-1 text-xs leading-5 text-studio-muted">
-            If you want to check your sound first, record a short sample and
-            play back the voice processing used in your recording.
-          </p>
         </div>
       </div>
 
