@@ -11,10 +11,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary: "bg-studio-accent text-white hover:bg-indigo-500 border-transparent",
-  secondary: "bg-studio-card text-studio-text hover:bg-[#1D2940] border-studio-border",
-  ghost: "bg-transparent text-studio-muted hover:text-studio-text hover:bg-white/5 border-transparent",
+  secondary:
+    "bg-studio-card text-studio-text hover:bg-[#1D2940] border-studio-border",
+  ghost:
+    "bg-transparent text-studio-muted hover:text-studio-text hover:bg-white/5 border-transparent",
   danger: "bg-studio-danger text-white hover:bg-red-500 border-transparent",
-  success: "bg-studio-success text-[#03110A] hover:bg-green-400 border-transparent",
+  success:
+    "bg-studio-success text-[#03110A] hover:bg-green-400 border-transparent",
 };
 
 const sizes = {
@@ -32,20 +35,27 @@ export function Button({
   className,
   children,
   disabled,
+  type = "button",
   ...props
 }: ButtonProps) {
   return (
     <button
+      {...props}
+      type={type}
       className={cn(
-        "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border text-center font-medium leading-tight transition focus:outline-none focus:ring-2 focus:ring-studio-cyan/70 focus:ring-offset-2 focus:ring-offset-studio-bg disabled:cursor-not-allowed disabled:opacity-50",
+        "inline-flex min-w-0 items-center justify-center gap-2 rounded-lg border text-center font-medium leading-tight transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-cyan/70 focus-visible:ring-offset-2 focus-visible:ring-offset-studio-bg disabled:cursor-not-allowed disabled:opacity-50",
         variants[variant],
         sizes[size],
         className,
       )}
       disabled={disabled || isLoading}
-      {...props}
+      aria-busy={isLoading || undefined}
     >
-      {isLoading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" /> : icon}
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+      ) : (
+        icon
+      )}
       {children ? <span className="min-w-0">{children}</span> : null}
     </button>
   );

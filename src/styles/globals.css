@@ -3,8 +3,16 @@
 @tailwind utilities;
 
 :root {
+  --font-family-app:
+    "Bahnschrift", "DIN Alternate", "Avenir Next", "Segoe UI Variable",
+    "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  --font-family-mono:
+    "Cascadia Code", "Cascadia Mono", "SFMono-Regular", Consolas, monospace;
+
+  --font-size-app: 16px;
+
   color-scheme: dark;
-  font-family: Inter, Manrope, ui-sans-serif, system-ui, sans-serif;
   background: #0b1020;
 }
 
@@ -14,17 +22,48 @@
 
 html {
   min-width: 320px;
+  font-family: var(--font-family-app);
+  font-size: var(--font-size-app);
   background: #0b1020;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
 body {
   min-width: 320px;
   min-height: 100svh;
   margin: 0;
+  font-family: inherit;
+  font-size: inherit;
+  line-height: 1.6;
+  letter-spacing: -0.01em;
+
   background:
     linear-gradient(180deg, rgba(34, 211, 238, 0.05), transparent 22rem),
     #0b1020;
+
   color: #f8fafc;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 0;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: -0.025em;
+}
+
+code,
+pre,
+kbd,
+samp {
+  font-family: var(--font-family-mono);
 }
 
 button,
@@ -32,6 +71,11 @@ select,
 input,
 textarea {
   font: inherit;
+}
+
+button {
+  font-weight: 500;
+  letter-spacing: 0.01em;
 }
 
 video {

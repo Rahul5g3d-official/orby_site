@@ -4,10 +4,10 @@ export type StudioLayout =
   | "screen-bubble"
   | "screen-side"
   | "grid"
-  | "pip"
-  | "custom";
+  | "pip";
 
-export type AudioMode = "natural" | "voice-boost" | "noise-reduced" | "broadcast" | "warm";
+export type AudioMode =
+  "natural" | "voice-boost" | "noise-reduced" | "broadcast" | "warm";
 
 export interface LayoutOption {
   id: StudioLayout;
@@ -23,19 +23,6 @@ export interface AudioModeOption {
 
 export interface MediaDeviceOption {
   deviceId: string;
-  groupId: string;
   kind: MediaDeviceKind;
   label: string;
-}
-
-export interface RemoteCamera {
-  peerId: string;
-  label: string;
-  stream: MediaStream;
-  status: "connecting" | "connected" | "disconnected";
-}
-
-export interface MediaError {
-  source: "camera" | "microphone" | "screen" | "recorder" | "webrtc" | "storage";
-  message: string;
 }

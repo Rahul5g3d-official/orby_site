@@ -1,4 +1,5 @@
-export type RecordingStatus = "idle" | "recording" | "paused" | "stopped" | "error";
+export type RecordingStatus =
+  "idle" | "recording" | "paused" | "stopped" | "error";
 
 export interface StoredRecording {
   id: string;
@@ -6,7 +7,6 @@ export interface StoredRecording {
   createdAt: string;
   durationMs: number;
   size: number;
-  type: string;
   blob: Blob;
 }
 

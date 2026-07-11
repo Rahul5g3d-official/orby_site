@@ -11,7 +11,9 @@ function openDatabase(): Promise<IDBDatabase> {
     request.onupgradeneeded = () => {
       const database = request.result;
       if (!database.objectStoreNames.contains(RECORDINGS_STORE)) {
-        const store = database.createObjectStore(RECORDINGS_STORE, { keyPath: "id" });
+        const store = database.createObjectStore(RECORDINGS_STORE, {
+          keyPath: "id",
+        });
         store.createIndex("createdAt", "createdAt");
       }
     };
@@ -46,7 +48,9 @@ export async function getRecordings(): Promise<StoredRecording[]> {
     transaction.objectStore(RECORDINGS_STORE).getAll(),
   );
   database.close();
-  return recordings.sort((first, second) => second.createdAt.localeCompare(first.createdAt));
+  return recordings.sort((first, second) =>
+    second.createdAt.localeCompare(first.createdAt),
+  );
 }
 
 export async function deleteRecording(id: string): Promise<void> {

@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Footer } from "./Footer";
 import { Navbar } from "./Navbar";
 
 interface AppLayoutProps {
@@ -7,9 +8,10 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <div className="min-h-screen bg-studio-bg text-studio-text">
+    <div className="flex min-h-screen flex-col bg-studio-bg text-studio-text">
       <Navbar />
-      {children}
+      <div className="flex-1">{children}</div>
+      <Footer />
     </div>
   );
 }

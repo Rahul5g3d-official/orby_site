@@ -11,14 +11,14 @@ export default {
           border: "#25304A",
           text: "#F8FAFC",
           muted: "#94A3B8",
-          accent: "#6366F1",
+          accent: "#5552D9",
           cyan: "#22D3EE",
           danger: "#EF4444",
           success: "#22C55E",
         },
       },
       fontFamily: {
-        sans: ["Inter", "Manrope", "ui-sans-serif", "system-ui", "sans-serif"],
+        sans: ["var(--font-family-app)"],
       },
       boxShadow: {
         studio: "0 24px 80px rgba(0, 0, 0, 0.35)",

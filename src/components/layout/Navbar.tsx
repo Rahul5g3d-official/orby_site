@@ -12,26 +12,33 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-40 border-b border-studio-border bg-studio-bg/90 backdrop-blur">
       <div className="mx-auto flex min-h-16 max-w-[1480px] items-center justify-between gap-3 px-3 py-2 sm:px-6">
-        <NavLink to="/" className="flex min-w-0 items-center gap-3 text-studio-text">
+        <NavLink
+          to="/"
+          aria-label="Screen Recorder home"
+          className="flex min-w-0 items-center gap-3 text-studio-text"
+        >
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-studio-accent">
             <Video className="h-5 w-5" />
           </span>
           <span className="truncate text-sm font-semibold sm:text-base">
-            <span className="sm:hidden">MultiCam</span>
-            <span className="hidden sm:inline">MultiCam Web Recorder</span>
+            framesync
           </span>
         </NavLink>
-        <nav className="flex shrink-0 items-center gap-1 overflow-x-auto">
+        <nav
+          aria-label="Primary navigation"
+          className="flex shrink-0 items-center gap-1 overflow-x-auto"
+        >
           {links.map((link) => {
             const Icon = link.icon;
             return (
               <NavLink
                 key={link.to}
                 to={link.to}
+                aria-label={link.label}
                 className={({ isActive }) =>
                   cn(
                     "flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium text-studio-muted transition hover:bg-white/5 hover:text-studio-text",
-                    isActive && "bg-white/8 text-studio-text",
+                    isActive && "bg-white/[0.08] text-studio-text",
                   )
                 }
               >

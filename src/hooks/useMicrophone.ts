@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getMediaErrorMessage, requestMicrophone, stopStream } from "../services/mediaService";
+import {
+  getMediaErrorMessage,
+  requestMicrophone,
+  stopStream,
+} from "../services/mediaService";
 
 type AudioContextConstructor = typeof AudioContext;
 
 function getAudioContextConstructor(): AudioContextConstructor {
-  return window.AudioContext || (window as unknown as { webkitAudioContext: AudioContextConstructor }).webkitAudioContext;
+  return (
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: AudioContextConstructor })
+      .webkitAudioContext
+  );
 }
 
 export function useMicrophone() {
@@ -15,6 +23,8 @@ export function useMicrophone() {
   const streamRef = useRef<MediaStream | null>(null);
   const animationRef = useRef<number | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+  const cleanupEndedListenerRef = useRef<(() => void) | null>(null);
+  const requestIdRef = useRef(0);
 
   const stopMeter = useCallback(() => {
     if (animationRef.current !== null) {
@@ -27,10 +37,14 @@ export function useMicrophone() {
   }, []);
 
   const stopMicrophone = useCallback(() => {
+    requestIdRef.current += 1;
+    cleanupEndedListenerRef.current?.();
+    cleanupEndedListenerRef.current = null;
     stopMeter();
     stopStream(streamRef.current);
     streamRef.current = null;
     setStream(null);
+    setIsLoading(false);
   }, [stopMeter]);
 
   const startMeter = useCallback((nextStream: MediaStream) => {
@@ -42,6 +56,7 @@ export function useMicrophone() {
     const data = new Uint8Array(analyser.frequencyBinCount);
     source.connect(analyser);
     audioContextRef.current = context;
+    void context.resume();
 
     const tick = () => {
       analyser.getByteFrequencyData(data);
@@ -55,25 +70,61 @@ export function useMicrophone() {
 
   const startMicrophone = useCallback(
     async (deviceId?: string) => {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
       setIsLoading(true);
       setError(null);
-      stopMicrophone();
+
+      cleanupEndedListenerRef.current?.();
+      cleanupEndedListenerRef.current = null;
+      stopMeter();
+      stopStream(streamRef.current);
+      streamRef.current = null;
+      setStream(null);
 
       try {
         const nextStream = await requestMicrophone(deviceId);
+        if (requestId !== requestIdRef.current) {
+          stopStream(nextStream);
+          return null;
+        }
+
+        const audioTrack = nextStream.getAudioTracks()[0];
+        if (!audioTrack || audioTrack.readyState !== "live") {
+          stopStream(nextStream);
+          throw new Error(
+            "The selected microphone did not provide a live audio track.",
+          );
+        }
+
+        const handleEnded = () => {
+          if (streamRef.current !== nextStream) return;
+          cleanupEndedListenerRef.current?.();
+          cleanupEndedListenerRef.current = null;
+          stopMeter();
+          streamRef.current = null;
+          setStream(null);
+        };
+        audioTrack.addEventListener("ended", handleEnded);
+
         streamRef.current = nextStream;
+        cleanupEndedListenerRef.current = () =>
+          audioTrack.removeEventListener("ended", handleEnded);
         setStream(nextStream);
         startMeter(nextStream);
         return nextStream;
       } catch (caughtError) {
-        const message = getMediaErrorMessage(caughtError, "Unable to start microphone.");
+        const message = getMediaErrorMessage(
+          caughtError,
+          "Unable to start microphone.",
+        );
         setError(message);
         return null;
       } finally {
-        setIsLoading(false);
+        if (requestId === requestIdRef.current) setIsLoading(false);
       }
     },
-    [startMeter, stopMicrophone],
+    [startMeter, stopMeter],
   );
 
   useEffect(() => stopMicrophone, [stopMicrophone]);

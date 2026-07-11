@@ -29,13 +29,18 @@ export function RecordingReview({
     <div className="overflow-hidden rounded-lg border border-studio-border bg-studio-card shadow-studio">
       <div className="flex flex-col gap-3 border-b border-studio-border p-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-base font-semibold text-studio-text">Review recording</h2>
+          <h2 className="text-base font-semibold text-studio-text">
+            Review recording
+          </h2>
           <p className="mt-1 text-sm text-studio-muted">
-            Play this file first. Save and Download unlock after playback starts.
+            Play this file first. Save and Download unlock after playback
+            starts.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <StatusBadge status={hasPlayed ? "ready" : "paused"}>{hasPlayed ? "previewed" : "play first"}</StatusBadge>
+          <StatusBadge status={hasPlayed ? "ready" : "paused"}>
+            {hasPlayed ? "previewed" : "play first"}
+          </StatusBadge>
           {isSaved ? <StatusBadge status="connected">saved</StatusBadge> : null}
         </div>
       </div>
@@ -70,7 +75,12 @@ export function RecordingReview({
           >
             Download
           </Button>
-          <Button className="w-full" variant="ghost" icon={<Trash2 className="h-4 w-4 shrink-0" />} onClick={onDiscard}>
+          <Button
+            className="w-full"
+            variant="ghost"
+            icon={<Trash2 className="h-4 w-4 shrink-0" />}
+            onClick={onDiscard}
+          >
             Discard
           </Button>
         </div>
