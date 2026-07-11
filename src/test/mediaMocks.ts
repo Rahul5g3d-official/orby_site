@@ -18,7 +18,10 @@ export class MockMediaStreamTrack extends EventTarget {
   }
 
   readonly clone = vi.fn(() => {
-    const clonedTrack = new MockMediaStreamTrack(this.kind, `${this.label} clone`);
+    const clonedTrack = new MockMediaStreamTrack(
+      this.kind,
+      `${this.label} clone`,
+    );
     clonedTrack.enabled = this.enabled;
     return clonedTrack.asMediaStreamTrack();
   });
@@ -70,8 +73,12 @@ export class MockMediaStream extends EventTarget {
   }
 }
 
-export function createMockStream(...tracks: MockMediaStreamTrack[]): MediaStream {
-  return new MockMediaStream(tracks.map((track) => track.asMediaStreamTrack())).asMediaStream();
+export function createMockStream(
+  ...tracks: MockMediaStreamTrack[]
+): MediaStream {
+  return new MockMediaStream(
+    tracks.map((track) => track.asMediaStreamTrack()),
+  ).asMediaStream();
 }
 
 export function installMediaStreamMock(): void {

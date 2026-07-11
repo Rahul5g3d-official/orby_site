@@ -1,6 +1,16 @@
-import { AlertCircle, CheckCircle2, Headphones, Mic2, RotateCcw, Square } from "lucide-react";
+import {
+  AlertCircle,
+  CheckCircle2,
+  Headphones,
+  Mic2,
+  RotateCcw,
+  Square,
+} from "lucide-react";
 import { useEffect, useId, useRef } from "react";
-import { useMicrophoneTest, type MicrophoneTestResult } from "../../hooks/useMicrophoneTest";
+import {
+  useMicrophoneTest,
+  type MicrophoneTestResult,
+} from "../../hooks/useMicrophoneTest";
 import type { AudioMode } from "../../types/media";
 import { cn } from "../../utils/cn";
 import { Button } from "../ui/Button";
@@ -37,7 +47,11 @@ export function MicrophoneVoiceTest({
   onResult,
   onPlayback,
 }: MicrophoneVoiceTestProps) {
-  const test = useMicrophoneTest({ microphoneStream, audioMode, maxDurationMs });
+  const test = useMicrophoneTest({
+    microphoneStream,
+    audioMode,
+    maxDurationMs,
+  });
   const titleId = useId();
   const onResultRef = useRef(onResult);
   const onPlaybackRef = useRef(onPlayback);
@@ -63,7 +77,10 @@ export function MicrophoneVoiceTest({
 
   return (
     <section
-      className={cn("rounded-xl border border-studio-border bg-white/[0.025] p-4", className)}
+      className={cn(
+        "rounded-xl border border-studio-border bg-white/[0.025] p-4",
+        className,
+      )}
       aria-labelledby={titleId}
     >
       <div className="flex items-start gap-3">
@@ -83,7 +100,8 @@ export function MicrophoneVoiceTest({
             </span>
           </div>
           <p className="mt-1 text-xs leading-5 text-studio-muted">
-            If you want to check your sound first, record a short sample and play back the voice processing used in your recording.
+            If you want to check your sound first, record a short sample and
+            play back the voice processing used in your recording.
           </p>
         </div>
       </div>
@@ -99,10 +117,17 @@ export function MicrophoneVoiceTest({
         <div className="mt-4" aria-live="polite">
           <div className="mb-2 flex items-center justify-between text-xs">
             <span className="inline-flex items-center gap-2 font-medium text-studio-text">
-              <span className={cn("h-2 w-2 rounded-full bg-red-400", isRecording && "animate-pulse")} />
+              <span
+                className={cn(
+                  "h-2 w-2 rounded-full bg-red-400",
+                  isRecording && "animate-pulse",
+                )}
+              />
               {isRecording ? "Recording test sample" : "Finishing sample"}
             </span>
-            <span className="tabular-nums text-studio-muted">{durationLabel}</span>
+            <span className="tabular-nums text-studio-muted">
+              {durationLabel}
+            </span>
           </div>
           <div
             className="h-1.5 overflow-hidden rounded-full bg-white/10"
@@ -121,7 +146,10 @@ export function MicrophoneVoiceTest({
       ) : null}
 
       {test.error ? (
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/10 p-3 text-xs leading-5 text-red-100" role="alert">
+        <div
+          className="mt-4 flex items-start gap-2 rounded-lg border border-red-400/20 bg-red-400/10 p-3 text-xs leading-5 text-red-100"
+          role="alert"
+        >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{test.error}</span>
         </div>
@@ -140,7 +168,9 @@ export function MicrophoneVoiceTest({
             preload="metadata"
             className="h-10 w-full"
             aria-label={`${MODE_LABELS[test.result.audioMode]} microphone test playback`}
-            onPlay={() => onPlaybackRef.current?.(test.result as MicrophoneTestResult)}
+            onPlay={() =>
+              onPlaybackRef.current?.(test.result as MicrophoneTestResult)
+            }
           />
         </div>
       ) : null}
@@ -151,7 +181,9 @@ export function MicrophoneVoiceTest({
             type="button"
             variant="danger"
             size="sm"
-            icon={<Square className="h-3.5 w-3.5 fill-current" aria-hidden="true" />}
+            icon={
+              <Square className="h-3.5 w-3.5 fill-current" aria-hidden="true" />
+            }
             onClick={() => void test.stopTest()}
           >
             Stop sample

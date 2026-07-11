@@ -1,4 +1,11 @@
-import { AudioLines, Check, Radio, Sparkles, Volume2, Wand2 } from "lucide-react";
+import {
+  AudioLines,
+  Check,
+  Radio,
+  Sparkles,
+  Volume2,
+  Wand2,
+} from "lucide-react";
 import { useId } from "react";
 import type { AudioMode, AudioModeOption } from "../../types/media";
 import { cn } from "../../utils/cn";
@@ -18,14 +25,24 @@ const icons = {
   warm: AudioLines,
 };
 
-export function VoiceModeSelector({ options, value, onChange, disabled = false }: VoiceModeSelectorProps) {
+export function VoiceModeSelector({
+  options,
+  value,
+  onChange,
+  disabled = false,
+}: VoiceModeSelectorProps) {
   const groupId = useId();
   const descriptionId = `${groupId}-description`;
 
   return (
     <fieldset disabled={disabled} aria-describedby={descriptionId}>
-      <legend className="text-sm font-semibold text-studio-text">Voice mode</legend>
-      <p id={descriptionId} className="mb-3 mt-1 text-xs leading-5 text-studio-muted">
+      <legend className="text-sm font-semibold text-studio-text">
+        Voice mode
+      </legend>
+      <p
+        id={descriptionId}
+        className="mb-3 mt-1 text-xs leading-5 text-studio-muted"
+      >
         Applies to your microphone in the final recording.
       </p>
       <div className="grid gap-2">
@@ -60,10 +77,19 @@ export function VoiceModeSelector({ options, value, onChange, disabled = false }
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </span>
                 <span className="min-w-0 flex-1">
-                  <span className="block text-sm font-medium text-studio-text">{option.name}</span>
-                  <span className="mt-0.5 block text-xs leading-5 text-studio-muted">{option.description}</span>
+                  <span className="block text-sm font-medium text-studio-text">
+                    {option.name}
+                  </span>
+                  <span className="mt-0.5 block text-xs leading-5 text-studio-muted">
+                    {option.description}
+                  </span>
                 </span>
-                {selected ? <Check className="h-4 w-4 shrink-0 text-studio-cyan" aria-hidden="true" /> : null}
+                {selected ? (
+                  <Check
+                    className="h-4 w-4 shrink-0 text-studio-cyan"
+                    aria-hidden="true"
+                  />
+                ) : null}
               </label>
             </div>
           );

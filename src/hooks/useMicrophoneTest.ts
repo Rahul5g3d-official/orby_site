@@ -1,6 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { AudioMode } from "../types/media";
-import { createMixedAudioStream, type MixedAudioStream } from "../utils/mergeStreams";
+import {
+  createMixedAudioStream,
+  type MixedAudioStream,
+} from "../utils/mergeStreams";
 
 const DEFAULT_MAX_DURATION_MS = 8_000;
 const MIN_MAX_DURATION_MS = 1_000;
@@ -15,12 +18,7 @@ const AUDIO_MIME_TYPES = [
 ];
 
 export type MicrophoneTestStatus =
-  | "idle"
-  | "preparing"
-  | "recording"
-  | "stopping"
-  | "ready"
-  | "error";
+  "idle" | "preparing" | "recording" | "stopping" | "ready" | "error";
 
 export interface MicrophoneTestResult {
   blob: Blob;
@@ -49,15 +47,28 @@ export interface UseMicrophoneTestResult {
 }
 
 function getSupportedAudioMimeType(): string {
-  if (typeof MediaRecorder === "undefined" || typeof MediaRecorder.isTypeSupported !== "function") {
+  if (
+    typeof MediaRecorder === "undefined" ||
+    typeof MediaRecorder.isTypeSupported !== "function"
+  ) {
     return "";
   }
 
-  return AUDIO_MIME_TYPES.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) ?? "";
+  return (
+    AUDIO_MIME_TYPES.find((mimeType) =>
+      MediaRecorder.isTypeSupported(mimeType),
+    ) ?? ""
+  );
 }
 
-function getLiveAudioTrack(stream: MediaStream | null): MediaStreamTrack | null {
-  return stream?.getAudioTracks().find((track) => track.readyState === "live" && track.enabled) ?? null;
+function getLiveAudioTrack(
+  stream: MediaStream | null,
+): MediaStreamTrack | null {
+  return (
+    stream
+      ?.getAudioTracks()
+      .find((track) => track.readyState === "live" && track.enabled) ?? null
+  );
 }
 
 /**
@@ -85,8 +96,11 @@ export function useMicrophoneTest({
   const intervalRef = useRef<number | null>(null);
   const autoStopRef = useRef<number | null>(null);
   const resultUrlRef = useRef<string | null>(null);
-  const completionPromiseRef = useRef<Promise<MicrophoneTestResult | null> | null>(null);
-  const completionResolverRef = useRef<((value: MicrophoneTestResult | null) => void) | null>(null);
+  const completionPromiseRef =
+    useRef<Promise<MicrophoneTestResult | null> | null>(null);
+  const completionResolverRef = useRef<
+    ((value: MicrophoneTestResult | null) => void) | null
+  >(null);
   const previousConfigurationRef = useRef({ microphoneStream, audioMode });
 
   const isMicrophoneReady = Boolean(getLiveAudioTrack(microphoneStream));
@@ -115,11 +129,14 @@ export function useMicrophoneTest({
     }
   }, []);
 
-  const resolveCompletion = useCallback((nextResult: MicrophoneTestResult | null) => {
-    completionResolverRef.current?.(nextResult);
-    completionResolverRef.current = null;
-    completionPromiseRef.current = null;
-  }, []);
+  const resolveCompletion = useCallback(
+    (nextResult: MicrophoneTestResult | null) => {
+      completionResolverRef.current?.(nextResult);
+      completionResolverRef.current = null;
+      completionPromiseRef.current = null;
+    },
+    [],
+  );
 
   const discardActiveSession = useCallback(() => {
     sessionRef.current += 1;
@@ -167,7 +184,9 @@ export function useMicrophoneTest({
 
     clearTimers();
     if (mountedRef.current) {
-      setDurationMs(Math.min(maxDurationMs, Math.max(0, Date.now() - startedAtRef.current)));
+      setDurationMs(
+        Math.min(maxDurationMs, Math.max(0, Date.now() - startedAtRef.current)),
+      );
       setStatus("stopping");
     }
 
@@ -199,7 +218,9 @@ export function useMicrophoneTest({
     const sourceTrack = getLiveAudioTrack(microphoneStream);
     if (!sourceTrack) {
       if (mountedRef.current) {
-        setError("Choose and enable a microphone before recording a test sample.");
+        setError(
+          "Choose and enable a microphone before recording a test sample.",
+        );
         setStatus("error");
       }
       return false;
@@ -217,7 +238,10 @@ export function useMicrophoneTest({
     let mixedAudio: MixedAudioStream | null = null;
 
     try {
-      mixedAudio = await createMixedAudioStream([{ stream: microphoneStream, role: "voice" }], audioMode);
+      mixedAudio = await createMixedAudioStream(
+        [{ stream: microphoneStream, role: "voice" }],
+        audioMode,
+      );
 
       if (!mountedRef.current || session !== sessionRef.current) {
         mixedAudio.stop();
@@ -225,13 +249,20 @@ export function useMicrophoneTest({
       }
 
       const processedStream = mixedAudio.stream;
-      if (!processedStream?.getAudioTracks().some((track) => track.readyState === "live")) {
+      if (
+        !processedStream
+          ?.getAudioTracks()
+          .some((track) => track.readyState === "live")
+      ) {
         mixedAudio.stop();
         throw new Error("The processed microphone stream is unavailable.");
       }
 
       const mimeType = getSupportedAudioMimeType();
-      const recorder = new MediaRecorder(processedStream, mimeType ? { mimeType } : undefined);
+      const recorder = new MediaRecorder(
+        processedStream,
+        mimeType ? { mimeType } : undefined,
+      );
       mixedAudioRef.current = mixedAudio;
       mixedAudio = null;
       recorderRef.current = recorder;
@@ -262,7 +293,10 @@ export function useMicrophoneTest({
         if (session !== sessionRef.current) return;
 
         clearTimers();
-        const finalDurationMs = Math.min(maxDurationMs, Math.max(0, Date.now() - startedAtRef.current));
+        const finalDurationMs = Math.min(
+          maxDurationMs,
+          Math.max(0, Date.now() - startedAtRef.current),
+        );
         const finalMimeType = recorder.mimeType || mimeType || "audio/webm";
         const blob = new Blob(chunksRef.current, { type: finalMimeType });
         chunksRef.current = [];
@@ -273,7 +307,9 @@ export function useMicrophoneTest({
         if (blob.size === 0) {
           resolveCompletion(null);
           if (mountedRef.current) {
-            setError("No microphone audio was captured. Check the selected input and try again.");
+            setError(
+              "No microphone audio was captured. Check the selected input and try again.",
+            );
             setStatus("error");
           }
           return;
@@ -306,7 +342,12 @@ export function useMicrophoneTest({
 
       intervalRef.current = window.setInterval(() => {
         if (!mountedRef.current) return;
-        setDurationMs(Math.min(maxDurationMs, Math.max(0, Date.now() - startedAtRef.current)));
+        setDurationMs(
+          Math.min(
+            maxDurationMs,
+            Math.max(0, Date.now() - startedAtRef.current),
+          ),
+        );
       }, 100);
 
       autoStopRef.current = window.setTimeout(() => {
@@ -321,7 +362,11 @@ export function useMicrophoneTest({
       mixedAudio?.stop();
       discardActiveSession();
       if (mountedRef.current) {
-        setError(caughtError instanceof Error ? caughtError.message : "Unable to start the microphone test.");
+        setError(
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to start the microphone test.",
+        );
         setStatus("error");
       }
       return false;
@@ -340,7 +385,10 @@ export function useMicrophoneTest({
 
   useEffect(() => {
     const previous = previousConfigurationRef.current;
-    if (previous.microphoneStream !== microphoneStream || previous.audioMode !== audioMode) {
+    if (
+      previous.microphoneStream !== microphoneStream ||
+      previous.audioMode !== audioMode
+    ) {
       previousConfigurationRef.current = { microphoneStream, audioMode };
       resetTest();
     }

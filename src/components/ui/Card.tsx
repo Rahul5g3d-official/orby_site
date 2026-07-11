@@ -8,7 +8,10 @@ interface CardProps extends HTMLAttributes<HTMLDivElement> {
 export function Card({ className, children, ...props }: CardProps) {
   return (
     <div
-      className={cn("rounded-lg border border-studio-border bg-studio-card/95 shadow-studio", className)}
+      className={cn(
+        "rounded-lg border border-studio-border bg-studio-card/95 shadow-studio",
+        className,
+      )}
       {...props}
     >
       {children}

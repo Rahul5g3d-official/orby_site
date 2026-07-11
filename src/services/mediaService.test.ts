@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockStream } from "../test/mediaMocks";
-import { getMediaErrorMessage, requestScreen, supportsRecordingApis } from "./mediaService";
+import {
+  getMediaErrorMessage,
+  requestScreen,
+  supportsRecordingApis,
+} from "./mediaService";
 
 describe("mediaService", () => {
   const getUserMedia = vi.fn();
@@ -62,12 +66,24 @@ describe("mediaService", () => {
     ["NotFoundError", "No matching media device was found."],
     ["NotReadableError", "The media device is already in use by another app."],
     ["AbortError", "The browser cancelled the media request."],
-  ])("maps %s browser failures to a useful message", (name, expectedMessage) => {
-    expect(getMediaErrorMessage(new DOMException("browser details", name), "Fallback")).toBe(expectedMessage);
-  });
+  ])(
+    "maps %s browser failures to a useful message",
+    (name, expectedMessage) => {
+      expect(
+        getMediaErrorMessage(
+          new DOMException("browser details", name),
+          "Fallback",
+        ),
+      ).toBe(expectedMessage);
+    },
+  );
 
   it("preserves regular Error messages and otherwise uses the supplied fallback", () => {
-    expect(getMediaErrorMessage(new Error("Device disconnected"), "Fallback")).toBe("Device disconnected");
-    expect(getMediaErrorMessage({ reason: "unknown" }, "Fallback")).toBe("Fallback");
+    expect(
+      getMediaErrorMessage(new Error("Device disconnected"), "Fallback"),
+    ).toBe("Device disconnected");
+    expect(getMediaErrorMessage({ reason: "unknown" }, "Fallback")).toBe(
+      "Fallback",
+    );
   });
 });

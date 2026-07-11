@@ -7,7 +7,8 @@ export type StudioLayout =
   | "pip"
   | "custom";
 
-export type AudioMode = "natural" | "voice-boost" | "noise-reduced" | "broadcast" | "warm";
+export type AudioMode =
+  "natural" | "voice-boost" | "noise-reduced" | "broadcast" | "warm";
 
 export interface LayoutOption {
   id: StudioLayout;

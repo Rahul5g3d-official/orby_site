@@ -47,7 +47,9 @@ describe("MicrophoneVoiceTest", () => {
       />,
     );
 
-    const playback = screen.getByLabelText("Broadcast microphone test playback");
+    const playback = screen.getByLabelText(
+      "Broadcast microphone test playback",
+    );
     expect(screen.getByText("Sample ready · 1.3s")).toBeInTheDocument();
 
     fireEvent.play(playback);

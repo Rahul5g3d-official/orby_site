@@ -1,4 +1,5 @@
-export type RecordingStatus = "idle" | "recording" | "paused" | "stopped" | "error";
+export type RecordingStatus =
+  "idle" | "recording" | "paused" | "stopped" | "error";
 
 export interface StoredRecording {
   id: string;

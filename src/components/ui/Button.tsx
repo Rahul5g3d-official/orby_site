@@ -11,10 +11,13 @@ interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 
 const variants = {
   primary: "bg-studio-accent text-white hover:bg-indigo-500 border-transparent",
-  secondary: "bg-studio-card text-studio-text hover:bg-[#1D2940] border-studio-border",
-  ghost: "bg-transparent text-studio-muted hover:text-studio-text hover:bg-white/5 border-transparent",
+  secondary:
+    "bg-studio-card text-studio-text hover:bg-[#1D2940] border-studio-border",
+  ghost:
+    "bg-transparent text-studio-muted hover:text-studio-text hover:bg-white/5 border-transparent",
   danger: "bg-studio-danger text-white hover:bg-red-500 border-transparent",
-  success: "bg-studio-success text-[#03110A] hover:bg-green-400 border-transparent",
+  success:
+    "bg-studio-success text-[#03110A] hover:bg-green-400 border-transparent",
 };
 
 const sizes = {
@@ -48,7 +51,11 @@ export function Button({
       disabled={disabled || isLoading}
       aria-busy={isLoading || undefined}
     >
-      {isLoading ? <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" /> : icon}
+      {isLoading ? (
+        <Loader2 className="h-4 w-4 shrink-0 animate-spin" aria-hidden="true" />
+      ) : (
+        icon
+      )}
       {children ? <span className="min-w-0">{children}</span> : null}
     </button>
   );

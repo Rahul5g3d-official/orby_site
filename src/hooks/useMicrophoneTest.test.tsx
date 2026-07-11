@@ -3,14 +3,19 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { createMockStream, MockMediaStreamTrack } from "../test/mediaMocks";
 import type { AudioMode } from "../types/media";
 import { createMixedAudioStream } from "../utils/mergeStreams";
-import { useMicrophoneTest, type MicrophoneTestResult } from "./useMicrophoneTest";
+import {
+  useMicrophoneTest,
+  type MicrophoneTestResult,
+} from "./useMicrophoneTest";
 
 vi.mock("../utils/mergeStreams", () => ({
   createMixedAudioStream: vi.fn(),
 }));
 
 class MockMediaRecorder {
-  static readonly isTypeSupported = vi.fn((mimeType: string) => mimeType === "audio/webm;codecs=opus");
+  static readonly isTypeSupported = vi.fn(
+    (mimeType: string) => mimeType === "audio/webm;codecs=opus",
+  );
 
   state: RecordingState = "inactive";
   readonly mimeType: string;
@@ -61,9 +66,9 @@ function mockProcessedAudio() {
   return { processedTrack, stop };
 }
 
-async function recordSample(
-  result: { current: ReturnType<typeof useMicrophoneTest> },
-): Promise<MicrophoneTestResult | null> {
+async function recordSample(result: {
+  current: ReturnType<typeof useMicrophoneTest>;
+}): Promise<MicrophoneTestResult | null> {
   let started = false;
   await act(async () => {
     started = await result.current.startTest();
@@ -119,7 +124,9 @@ describe("useMicrophoneTest", () => {
     expect(started).toBe(false);
     expect(result.current.isMicrophoneReady).toBe(false);
     expect(result.current.status).toBe("error");
-    expect(result.current.error).toBe("Choose and enable a microphone before recording a test sample.");
+    expect(result.current.error).toBe(
+      "Choose and enable a microphone before recording a test sample.",
+    );
     expect(mockedCreateMixedAudioStream).not.toHaveBeenCalled();
   });
 
@@ -157,7 +164,10 @@ describe("useMicrophoneTest", () => {
     const microphone = createReadyMicrophone();
     mockProcessedAudio();
     const { result } = renderHook(() =>
-      useMicrophoneTest({ microphoneStream: microphone.stream, audioMode: "natural" }),
+      useMicrophoneTest({
+        microphoneStream: microphone.stream,
+        audioMode: "natural",
+      }),
     );
     const sample = await recordSample(result);
 

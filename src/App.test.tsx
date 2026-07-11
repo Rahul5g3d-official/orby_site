@@ -29,8 +29,15 @@ describe("App data-router integration", () => {
 
     render(<RouterProvider router={router} />);
 
-    expect(await screen.findByRole("heading", { level: 1, name: "Record your tab, camera, and voice" })).toBeVisible();
-    expect(screen.getByRole("button", { name: /Studio setup/ })).toHaveAttribute("aria-haspopup", "dialog");
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: "Record your tab, camera, and voice",
+      }),
+    ).toBeVisible();
+    expect(
+      screen.getByRole("button", { name: /Studio setup/ }),
+    ).toHaveAttribute("aria-haspopup", "dialog");
     expect(screen.queryByText(/phone camera|QR code/i)).not.toBeInTheDocument();
   });
 });

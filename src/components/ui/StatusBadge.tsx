@@ -16,7 +16,12 @@ const classes = {
 
 export function StatusBadge({ status, children }: StatusBadgeProps) {
   return (
-    <span className={cn("inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium", classes[status])}>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-medium",
+        classes[status],
+      )}
+    >
       {children}
     </span>
   );

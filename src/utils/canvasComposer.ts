@@ -23,14 +23,24 @@ interface VideoSource {
   video: HTMLVideoElement;
 }
 
-function getLiveVideoTrack(stream: MediaStream | null): MediaStreamTrack | null {
-  return stream?.getVideoTracks().find((track) => track.readyState === "live") || null;
+function getLiveVideoTrack(
+  stream: MediaStream | null,
+): MediaStreamTrack | null {
+  return (
+    stream?.getVideoTracks().find((track) => track.readyState === "live") ||
+    null
+  );
 }
 
-function createOutputWithAudio(videoTrack: MediaStreamTrack, mixedAudio: MixedAudioStream): CanvasComposition {
+function createOutputWithAudio(
+  videoTrack: MediaStreamTrack,
+  mixedAudio: MixedAudioStream,
+): CanvasComposition {
   const outputVideoTrack = videoTrack.clone();
   const stream = new MediaStream([outputVideoTrack]);
-  mixedAudio.stream?.getAudioTracks().forEach((track) => stream.addTrack(track));
+  mixedAudio.stream
+    ?.getAudioTracks()
+    .forEach((track) => stream.addTrack(track));
 
   return {
     stream,
@@ -43,7 +53,9 @@ function createOutputWithAudio(videoTrack: MediaStreamTrack, mixedAudio: MixedAu
   };
 }
 
-async function createVideoElement(stream: MediaStream): Promise<HTMLVideoElement> {
+async function createVideoElement(
+  stream: MediaStream,
+): Promise<HTMLVideoElement> {
   const video = document.createElement("video");
   video.srcObject = stream;
   video.muted = true;
@@ -99,7 +111,13 @@ function drawContain(
   if (sourceRatio > targetRatio) drawHeight = width / sourceRatio;
   else drawWidth = height * sourceRatio;
 
-  context.drawImage(video, x + (width - drawWidth) / 2, y + (height - drawHeight) / 2, drawWidth, drawHeight);
+  context.drawImage(
+    video,
+    x + (width - drawWidth) / 2,
+    y + (height - drawHeight) / 2,
+    drawWidth,
+    drawHeight,
+  );
 }
 
 function roundedRect(
@@ -140,7 +158,12 @@ function drawRoundedVideo(
   context.stroke();
 }
 
-function drawEmptyState(context: CanvasRenderingContext2D, width: number, height: number, label: string): void {
+function drawEmptyState(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  label: string,
+): void {
   context.fillStyle = "#0B1020";
   context.fillRect(0, 0, width, height);
   context.fillStyle = "#161F32";
@@ -151,7 +174,12 @@ function drawEmptyState(context: CanvasRenderingContext2D, width: number, height
   context.fillText(label, width / 2, height / 2);
 }
 
-function drawLabel(context: CanvasRenderingContext2D, label: string, x: number, y: number): void {
+function drawLabel(
+  context: CanvasRenderingContext2D,
+  label: string,
+  x: number,
+  y: number,
+): void {
   context.save();
   context.font = "24px Inter, sans-serif";
   const metrics = context.measureText(label);
@@ -164,7 +192,12 @@ function drawLabel(context: CanvasRenderingContext2D, label: string, x: number, 
   context.restore();
 }
 
-function drawGrid(context: CanvasRenderingContext2D, sources: VideoSource[], width: number, height: number): void {
+function drawGrid(
+  context: CanvasRenderingContext2D,
+  sources: VideoSource[],
+  width: number,
+  height: number,
+): void {
   if (sources.length === 0) {
     drawEmptyState(context, width, height, "Add a screen or webcam");
     return;
@@ -188,7 +221,9 @@ function stopVideo(video: HTMLVideoElement | null): void {
   video.srcObject = null;
 }
 
-export async function createCanvasComposition(options: CanvasCompositionOptions): Promise<CanvasComposition> {
+export async function createCanvasComposition(
+  options: CanvasCompositionOptions,
+): Promise<CanvasComposition> {
   const screenTrack = getLiveVideoTrack(options.screenStream);
   const cameraTrack = getLiveVideoTrack(options.localCameraStream);
   let mixedAudio: MixedAudioStream | null = null;
@@ -205,11 +240,17 @@ export async function createCanvasComposition(options: CanvasCompositionOptions)
     );
 
     if (options.layout === "screen-only") {
-      if (!screenTrack) throw new Error("Choose a browser tab, window, or screen before recording.");
+      if (!screenTrack)
+        throw new Error(
+          "Choose a browser tab, window, or screen before recording.",
+        );
       return createOutputWithAudio(screenTrack, mixedAudio);
     }
 
-    if (!screenTrack && !cameraTrack) throw new Error("Choose a screen or enable your webcam before recording.");
+    if (!screenTrack && !cameraTrack)
+      throw new Error(
+        "Choose a screen or enable your webcam before recording.",
+      );
 
     const width = options.width ?? 1920;
     const height = options.height ?? 1080;
@@ -251,7 +292,8 @@ export async function createCanvasComposition(options: CanvasCompositionOptions)
           else drawEmptyState(context, width, height, "Select a screen source");
 
           if (camera) {
-            const bubbleWidth = options.layout === "pip" ? width * 0.28 : width * 0.22;
+            const bubbleWidth =
+              options.layout === "pip" ? width * 0.28 : width * 0.22;
             const bubbleHeight = bubbleWidth * 0.62;
             drawRoundedVideo(
               context,
@@ -267,17 +309,44 @@ export async function createCanvasComposition(options: CanvasCompositionOptions)
 
         if (options.layout === "screen-side") {
           const sideWidth = width * 0.3;
-          if (screen) drawContain(context, screen.video, 0, 0, width - sideWidth, height);
-          else drawEmptyState(context, width - sideWidth, height, "Select a screen");
+          if (screen)
+            drawContain(context, screen.video, 0, 0, width - sideWidth, height);
+          else
+            drawEmptyState(
+              context,
+              width - sideWidth,
+              height,
+              "Select a screen",
+            );
 
           if (camera) {
-            drawRoundedVideo(context, camera.video, width - sideWidth + 24, 24, sideWidth - 48, height - 48, 24);
-            drawLabel(context, camera.label, width - sideWidth + 42, height - 42);
+            drawRoundedVideo(
+              context,
+              camera.video,
+              width - sideWidth + 24,
+              24,
+              sideWidth - 48,
+              height - 48,
+              24,
+            );
+            drawLabel(
+              context,
+              camera.label,
+              width - sideWidth + 42,
+              height - 42,
+            );
           }
         }
 
         if (options.layout === "grid") {
-          drawGrid(context, [screen, camera].filter((source): source is VideoSource => Boolean(source)), width, height);
+          drawGrid(
+            context,
+            [screen, camera].filter((source): source is VideoSource =>
+              Boolean(source),
+            ),
+            width,
+            height,
+          );
         }
 
         if (options.layout === "custom") {
@@ -287,7 +356,15 @@ export async function createCanvasComposition(options: CanvasCompositionOptions)
           if (camera) {
             const cardWidth = width * 0.22;
             const cardHeight = cardWidth * 0.62;
-            drawRoundedVideo(context, camera.video, 48, 48, cardWidth, cardHeight, 24);
+            drawRoundedVideo(
+              context,
+              camera.video,
+              48,
+              48,
+              cardWidth,
+              cardHeight,
+              24,
+            );
             drawLabel(context, camera.label, 70, 48 + cardHeight - 18);
           }
 
@@ -304,7 +381,9 @@ export async function createCanvasComposition(options: CanvasCompositionOptions)
     render();
 
     const stream = canvas.captureStream(30);
-    mixedAudio.stream?.getAudioTracks().forEach((track) => stream.addTrack(track));
+    mixedAudio.stream
+      ?.getAudioTracks()
+      .forEach((track) => stream.addTrack(track));
 
     return {
       stream,

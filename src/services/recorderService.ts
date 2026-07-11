@@ -6,7 +6,9 @@ const MIME_TYPES = [
 ];
 
 export function getSupportedRecorderMimeType(): string {
-  return MIME_TYPES.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) || "";
+  return (
+    MIME_TYPES.find((mimeType) => MediaRecorder.isTypeSupported(mimeType)) || ""
+  );
 }
 
 export function createMediaRecorder(stream: MediaStream): MediaRecorder {

@@ -19,7 +19,12 @@ const focusableSelector = [
   "[tabindex]:not([tabindex='-1'])",
 ].join(",");
 
-export function StudioSetupSheet({ isOpen, onClose, locked, children }: StudioSetupSheetProps) {
+export function StudioSetupSheet({
+  isOpen,
+  onClose,
+  locked,
+  children,
+}: StudioSetupSheetProps) {
   const panelRef = useRef<HTMLDivElement | null>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
   const onCloseRef = useRef(onClose);
@@ -33,11 +38,16 @@ export function StudioSetupSheet({ isOpen, onClose, locked, children }: StudioSe
   useEffect(() => {
     if (!isOpen) return;
 
-    previouslyFocusedRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null;
+    previouslyFocusedRef.current =
+      document.activeElement instanceof HTMLElement
+        ? document.activeElement
+        : null;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
-    const focusFrame = window.requestAnimationFrame(() => panelRef.current?.focus());
+    const focusFrame = window.requestAnimationFrame(() =>
+      panelRef.current?.focus(),
+    );
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
@@ -48,9 +58,9 @@ export function StudioSetupSheet({ isOpen, onClose, locked, children }: StudioSe
 
       if (event.key !== "Tab" || !panelRef.current) return;
 
-      const focusableElements = Array.from(panelRef.current.querySelectorAll<HTMLElement>(focusableSelector)).filter(
-        (element) => element.getAttribute("aria-hidden") !== "true",
-      );
+      const focusableElements = Array.from(
+        panelRef.current.querySelectorAll<HTMLElement>(focusableSelector),
+      ).filter((element) => element.getAttribute("aria-hidden") !== "true");
 
       if (focusableElements.length === 0) {
         event.preventDefault();
@@ -61,7 +71,9 @@ export function StudioSetupSheet({ isOpen, onClose, locked, children }: StudioSe
       const firstElement = focusableElements[0];
       const lastElement = focusableElements[focusableElements.length - 1];
       const activeElement = document.activeElement;
-      const activeElementIsFocusable = focusableElements.some((element) => element === activeElement);
+      const activeElementIsFocusable = focusableElements.some(
+        (element) => element === activeElement,
+      );
 
       if (!activeElementIsFocusable) {
         event.preventDefault();
@@ -111,14 +123,26 @@ export function StudioSetupSheet({ isOpen, onClose, locked, children }: StudioSe
         <header className="border-b border-studio-border bg-studio-panel px-4 py-4 sm:px-5">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <h2 id={titleId} className="text-lg font-semibold text-studio-text">
+              <h2
+                id={titleId}
+                className="text-lg font-semibold text-studio-text"
+              >
                 Studio setup
               </h2>
-              <p id={descriptionId} className="mt-1 text-sm leading-6 text-studio-muted">
+              <p
+                id={descriptionId}
+                className="mt-1 text-sm leading-6 text-studio-muted"
+              >
                 Choose your sources, layout, and voice settings.
               </p>
             </div>
-            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Close studio setup" className="shrink-0">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              aria-label="Close studio setup"
+              className="shrink-0"
+            >
               <X className="h-5 w-5" aria-hidden="true" />
             </Button>
           </div>

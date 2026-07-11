@@ -9,10 +9,19 @@ interface DeviceSelectorProps {
   disabled?: boolean;
 }
 
-export function DeviceSelector({ label, devices, value, placeholder, onChange, disabled = false }: DeviceSelectorProps) {
+export function DeviceSelector({
+  label,
+  devices,
+  value,
+  placeholder,
+  onChange,
+  disabled = false,
+}: DeviceSelectorProps) {
   return (
     <label className="block">
-      <span className="mb-2 block text-sm font-medium text-studio-text">{label}</span>
+      <span className="mb-2 block text-sm font-medium text-studio-text">
+        {label}
+      </span>
       <select
         value={value}
         disabled={disabled}

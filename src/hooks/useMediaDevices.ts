@@ -14,7 +14,11 @@ export function useMediaDevices() {
     try {
       setDevices(await listMediaDevices());
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Unable to list media devices.");
+      setError(
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Unable to list media devices.",
+      );
     } finally {
       setIsLoading(false);
     }
@@ -24,7 +28,11 @@ export function useMediaDevices() {
     void refreshDevices();
 
     navigator.mediaDevices?.addEventListener("devicechange", refreshDevices);
-    return () => navigator.mediaDevices?.removeEventListener("devicechange", refreshDevices);
+    return () =>
+      navigator.mediaDevices?.removeEventListener(
+        "devicechange",
+        refreshDevices,
+      );
   }, [refreshDevices]);
 
   const cameras = useMemo(

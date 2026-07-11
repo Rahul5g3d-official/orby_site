@@ -3,7 +3,10 @@ import { RecordingCard } from "../components/recordings/RecordingCard";
 import { Button } from "../components/ui/Button";
 import { EmptyState } from "../components/ui/EmptyState";
 import { ToastNotification } from "../components/ui/ToastNotification";
-import { buildRecordingFilename, downloadBlob } from "../services/recorderService";
+import {
+  buildRecordingFilename,
+  downloadBlob,
+} from "../services/recorderService";
 import { deleteRecording, getRecordings } from "../services/storageService";
 import type { StoredRecording } from "../types/recording";
 
@@ -26,7 +29,10 @@ export function RecordingsPage() {
   }, [loadRecordings]);
 
   const handleDownload = (recording: StoredRecording) => {
-    downloadBlob(recording.blob, recording.name || buildRecordingFilename(new Date(recording.createdAt)));
+    downloadBlob(
+      recording.blob,
+      recording.name || buildRecordingFilename(new Date(recording.createdAt)),
+    );
   };
 
   const handleDelete = async (id: string) => {
@@ -40,9 +46,15 @@ export function RecordingsPage() {
       <ToastNotification type="success" message={toast} />
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold text-studio-text sm:text-3xl">Recordings</h1>
+          <h1 className="text-2xl font-semibold text-studio-text sm:text-3xl">
+            Recordings
+          </h1>
         </div>
-        <Button className="w-full sm:w-auto" variant="secondary" onClick={() => void loadRecordings()}>
+        <Button
+          className="w-full sm:w-auto"
+          variant="secondary"
+          onClick={() => void loadRecordings()}
+        >
           Refresh
         </Button>
       </div>

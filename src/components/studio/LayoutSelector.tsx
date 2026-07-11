@@ -10,7 +10,12 @@ interface LayoutSelectorProps {
   disabled?: boolean;
 }
 
-export function LayoutSelector({ layouts, value, onChange, disabled = false }: LayoutSelectorProps) {
+export function LayoutSelector({
+  layouts,
+  value,
+  onChange,
+  disabled = false,
+}: LayoutSelectorProps) {
   const groupId = useId();
 
   return (
@@ -44,10 +49,19 @@ export function LayoutSelector({ layouts, value, onChange, disabled = false }: L
                 )}
               >
                 <span>
-                  <span className="block text-sm font-medium text-studio-text">{layout.name}</span>
-                  <span className="mt-1 block text-xs leading-5 text-studio-muted">{layout.description}</span>
+                  <span className="block text-sm font-medium text-studio-text">
+                    {layout.name}
+                  </span>
+                  <span className="mt-1 block text-xs leading-5 text-studio-muted">
+                    {layout.description}
+                  </span>
                 </span>
-                {isSelected ? <Check className="h-4 w-4 shrink-0 text-studio-cyan" aria-hidden="true" /> : null}
+                {isSelected ? (
+                  <Check
+                    className="h-4 w-4 shrink-0 text-studio-cyan"
+                    aria-hidden="true"
+                  />
+                ) : null}
               </label>
             </div>
           );

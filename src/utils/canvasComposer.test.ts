@@ -18,14 +18,22 @@ describe("createCanvasComposition screen-only mode", () => {
 
     expect(composition.mode).toBe("direct");
     expect(composition.canvas).toBeNull();
-    expect(composition.stream.getVideoTracks()).toEqual([displayVideo.clone.mock.results[0].value]);
-    expect(composition.stream.getAudioTracks()).toEqual([displayAudio.clone.mock.results[0].value]);
+    expect(composition.stream.getVideoTracks()).toEqual([
+      displayVideo.clone.mock.results[0].value,
+    ]);
+    expect(composition.stream.getAudioTracks()).toEqual([
+      displayAudio.clone.mock.results[0].value,
+    ]);
     expect(displayVideo.clone).toHaveBeenCalledOnce();
     expect(displayAudio.clone).toHaveBeenCalledOnce();
 
     composition.stop();
 
-    expect(composition.stream.getTracks().every((track) => track.readyState === "ended")).toBe(true);
+    expect(
+      composition.stream
+        .getTracks()
+        .every((track) => track.readyState === "ended"),
+    ).toBe(true);
     expect(displayVideo.readyState).toBe("live");
     expect(displayAudio.readyState).toBe("live");
   });
@@ -39,6 +47,8 @@ describe("createCanvasComposition screen-only mode", () => {
         microphoneStream: null,
         audioMode: "natural",
       }),
-    ).rejects.toThrow("Choose a browser tab, window, or screen before recording.");
+    ).rejects.toThrow(
+      "Choose a browser tab, window, or screen before recording.",
+    );
   });
 });

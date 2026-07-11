@@ -13,7 +13,11 @@ const iconMap = {
   error: AlertCircle,
 };
 
-export function ToastNotification({ type = "info", message, onDismiss }: ToastNotificationProps) {
+export function ToastNotification({
+  type = "info",
+  message,
+  onDismiss,
+}: ToastNotificationProps) {
   if (!message) return null;
 
   const Icon = iconMap[type];

@@ -23,7 +23,9 @@ export function useRecorder() {
   const recorderErrorRef = useRef<string | null>(null);
   const resultRef = useRef<RecorderResult | null>(null);
   const stopPromiseRef = useRef<Promise<RecorderResult | null> | null>(null);
-  const stopResolverRef = useRef<((result: RecorderResult | null) => void) | null>(null);
+  const stopResolverRef = useRef<
+    ((result: RecorderResult | null) => void) | null
+  >(null);
   const mountedRef = useRef(true);
 
   const calculateDuration = useCallback(() => {
@@ -78,14 +80,20 @@ export function useRecorder() {
   const startRecording = useCallback(
     (stream: MediaStream) => {
       const currentRecorder = recorderRef.current;
-      if (stopPromiseRef.current || (currentRecorder && currentRecorder.state !== "inactive")) {
+      if (
+        stopPromiseRef.current ||
+        (currentRecorder && currentRecorder.state !== "inactive")
+      ) {
         if (mountedRef.current) {
           setError("A recording is already in progress.");
         }
         return false;
       }
 
-      if (!stream.active || !stream.getVideoTracks().some((track) => track.readyState === "live")) {
+      if (
+        !stream.active ||
+        !stream.getVideoTracks().some((track) => track.readyState === "live")
+      ) {
         if (mountedRef.current) {
           setError("The composed media stream is not active.");
           setStatus("error");
@@ -130,7 +138,8 @@ export function useRecorder() {
           if (recorderRef.current !== nextRecorder) return;
 
           const mediaError = (event as Event & { error?: DOMException }).error;
-          const message = mediaError?.message || "Recording failed while writing media data.";
+          const message =
+            mediaError?.message || "Recording failed while writing media data.";
           reportRecorderFailure(message);
 
           // Resolve an in-flight stop immediately. The later stop event is still
@@ -175,7 +184,9 @@ export function useRecorder() {
             chunksRef.current = [];
 
             if (blob.size === 0) {
-              reportRecorderFailure("Recording produced an empty media file. Please try again.");
+              reportRecorderFailure(
+                "Recording produced an empty media file. Please try again.",
+              );
               settleStop(null);
               return;
             }
@@ -196,7 +207,10 @@ export function useRecorder() {
             setStatus("stopped");
             settleStop(nextResult);
           } catch (caughtError) {
-            const message = caughtError instanceof Error ? caughtError.message : "Unable to finalize the recording.";
+            const message =
+              caughtError instanceof Error
+                ? caughtError.message
+                : "Unable to finalize the recording.";
             reportRecorderFailure(message);
             settleStop(null);
           }
@@ -223,13 +237,23 @@ export function useRecorder() {
         recorderRef.current = null;
         chunksRef.current = [];
         startedAtRef.current = 0;
-        const message = caughtError instanceof Error ? caughtError.message : "Unable to start recording.";
+        const message =
+          caughtError instanceof Error
+            ? caughtError.message
+            : "Unable to start recording.";
         reportRecorderFailure(message);
         settleStop(null);
         return false;
       }
     },
-    [calculateDuration, clearTimer, reportRecorderFailure, revokeCurrentResult, settleStop, startTimer],
+    [
+      calculateDuration,
+      clearTimer,
+      reportRecorderFailure,
+      revokeCurrentResult,
+      settleStop,
+      startTimer,
+    ],
   );
 
   const pauseRecording = useCallback(() => {
@@ -278,7 +302,10 @@ export function useRecorder() {
     try {
       recorder.stop();
     } catch (caughtError) {
-      const message = caughtError instanceof Error ? caughtError.message : "Unable to stop recording safely.";
+      const message =
+        caughtError instanceof Error
+          ? caughtError.message
+          : "Unable to stop recording safely.";
       reportRecorderFailure(message);
       settleStop(null);
     }

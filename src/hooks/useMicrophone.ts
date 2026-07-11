@@ -1,10 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getMediaErrorMessage, requestMicrophone, stopStream } from "../services/mediaService";
+import {
+  getMediaErrorMessage,
+  requestMicrophone,
+  stopStream,
+} from "../services/mediaService";
 
 type AudioContextConstructor = typeof AudioContext;
 
 function getAudioContextConstructor(): AudioContextConstructor {
-  return window.AudioContext || (window as unknown as { webkitAudioContext: AudioContextConstructor }).webkitAudioContext;
+  return (
+    window.AudioContext ||
+    (window as unknown as { webkitAudioContext: AudioContextConstructor })
+      .webkitAudioContext
+  );
 }
 
 export function useMicrophone() {
@@ -84,7 +92,9 @@ export function useMicrophone() {
         const audioTrack = nextStream.getAudioTracks()[0];
         if (!audioTrack || audioTrack.readyState !== "live") {
           stopStream(nextStream);
-          throw new Error("The selected microphone did not provide a live audio track.");
+          throw new Error(
+            "The selected microphone did not provide a live audio track.",
+          );
         }
 
         const handleEnded = () => {
@@ -98,12 +108,16 @@ export function useMicrophone() {
         audioTrack.addEventListener("ended", handleEnded);
 
         streamRef.current = nextStream;
-        cleanupEndedListenerRef.current = () => audioTrack.removeEventListener("ended", handleEnded);
+        cleanupEndedListenerRef.current = () =>
+          audioTrack.removeEventListener("ended", handleEnded);
         setStream(nextStream);
         startMeter(nextStream);
         return nextStream;
       } catch (caughtError) {
-        const message = getMediaErrorMessage(caughtError, "Unable to start microphone.");
+        const message = getMediaErrorMessage(
+          caughtError,
+          "Unable to start microphone.",
+        );
         setError(message);
         return null;
       } finally {

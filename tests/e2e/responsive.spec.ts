@@ -7,18 +7,35 @@ async function expectNoHorizontalPageOverflow(page: Page) {
     viewportWidth: document.documentElement.clientWidth,
   }));
 
-  expect(dimensions.bodyWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
-  expect(dimensions.documentWidth).toBeLessThanOrEqual(dimensions.viewportWidth + 1);
+  expect(dimensions.bodyWidth).toBeLessThanOrEqual(
+    dimensions.viewportWidth + 1,
+  );
+  expect(dimensions.documentWidth).toBeLessThanOrEqual(
+    dimensions.viewportWidth + 1,
+  );
 }
 
-test("the core visual flow stays inside desktop and mobile viewports", async ({ page }) => {
+test("the core visual flow stays inside desktop and mobile viewports", async ({
+  page,
+}) => {
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1, name: "Screen Recorder" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Screen Recorder" }),
+  ).toBeVisible();
   await expectNoHorizontalPageOverflow(page);
 
-  await page.getByRole("link", { name: "Start Recording", exact: true }).click();
-  await expect(page.getByRole("heading", { level: 1, name: "Record your tab, camera, and voice" })).toBeVisible();
-  await expect(page.getByRole("heading", { name: "Live stage", exact: true })).toBeVisible();
+  await page
+    .getByRole("link", { name: "Start Recording", exact: true })
+    .click();
+  await expect(
+    page.getByRole("heading", {
+      level: 1,
+      name: "Record your tab, camera, and voice",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Live stage", exact: true }),
+  ).toBeVisible();
   await expectNoHorizontalPageOverflow(page);
 
   await page.getByRole("button", { name: /Studio setup/ }).click();
@@ -30,22 +47,43 @@ test("the core visual flow stays inside desktop and mobile viewports", async ({ 
   expect(viewport).not.toBeNull();
   if (dialogBox && viewport) {
     expect(dialogBox.x).toBeGreaterThanOrEqual(-1);
-    expect(dialogBox.x + dialogBox.width).toBeLessThanOrEqual(viewport.width + 1);
+    expect(dialogBox.x + dialogBox.width).toBeLessThanOrEqual(
+      viewport.width + 1,
+    );
     expect(dialogBox.y).toBeGreaterThanOrEqual(-1);
-    expect(dialogBox.y + dialogBox.height).toBeLessThanOrEqual(viewport.height + 1);
+    expect(dialogBox.y + dialogBox.height).toBeLessThanOrEqual(
+      viewport.height + 1,
+    );
   }
   await expectNoHorizontalPageOverflow(page);
 
   await dialog.getByRole("tab", { name: "Layout", exact: true }).click();
   await expect(page).toHaveURL(/\/studio$/);
   await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
-  await expect(dialog.getByRole("heading", { name: "Choose the composition", exact: true })).toBeVisible();
-  await expect(dialog.getByRole("heading", { name: "Choose what to record", exact: true })).toHaveCount(0);
+  await expect(
+    dialog.getByRole("heading", {
+      name: "Choose the composition",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByRole("heading", { name: "Choose what to record", exact: true }),
+  ).toHaveCount(0);
   await dialog.getByRole("tab", { name: "Voice", exact: true }).click();
   await expect(page).toHaveURL(/\/studio$/);
   await expect(dialog.getByRole("tabpanel")).toHaveCount(1);
-  await expect(dialog.getByRole("heading", { name: "Choose and test your sound", exact: true })).toBeVisible();
-  await expect(dialog.getByRole("heading", { name: "Choose the composition", exact: true })).toHaveCount(0);
+  await expect(
+    dialog.getByRole("heading", {
+      name: "Choose and test your sound",
+      exact: true,
+    }),
+  ).toBeVisible();
+  await expect(
+    dialog.getByRole("heading", {
+      name: "Choose the composition",
+      exact: true,
+    }),
+  ).toHaveCount(0);
   await expectNoHorizontalPageOverflow(page);
 
   await dialog.getByRole("button", { name: "Done", exact: true }).click();
@@ -53,7 +91,11 @@ test("the core visual flow stays inside desktop and mobile viewports", async ({ 
     .getByRole("navigation", { name: "Primary navigation" })
     .getByRole("link", { name: "Recordings", exact: true })
     .click();
-  await expect(page.getByRole("heading", { level: 1, name: "Recordings", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Refresh", exact: true })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { level: 1, name: "Recordings", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Refresh", exact: true }),
+  ).toBeVisible();
   await expectNoHorizontalPageOverflow(page);
 });

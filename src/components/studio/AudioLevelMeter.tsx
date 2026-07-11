@@ -5,14 +5,19 @@ interface AudioLevelMeterProps {
   label?: string;
 }
 
-export function AudioLevelMeter({ level, label = "Mic level" }: AudioLevelMeterProps) {
+export function AudioLevelMeter({
+  level,
+  label = "Mic level",
+}: AudioLevelMeterProps) {
   const percentage = Math.round(Math.min(1, Math.max(0, level)) * 100);
   const labelId = useId();
 
   return (
     <div>
       <div className="mb-2 flex items-center justify-between text-sm">
-        <span id={labelId} className="font-medium text-studio-text">{label}</span>
+        <span id={labelId} className="font-medium text-studio-text">
+          {label}
+        </span>
         <span className="text-studio-muted">{percentage}%</span>
       </div>
       <div
