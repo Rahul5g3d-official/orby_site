@@ -41,7 +41,6 @@ export function RecordingsPage() {
       <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-studio-text sm:text-3xl">Recordings</h1>
-          <p className="mt-2 text-studio-muted">Local browser recordings saved in IndexedDB.</p>
         </div>
         <Button className="w-full sm:w-auto" variant="secondary" onClick={() => void loadRecordings()}>
           Refresh
@@ -53,7 +52,7 @@ export function RecordingsPage() {
       ) : recordings.length === 0 ? (
         <EmptyState
           title="No recordings yet"
-          description="Finished recordings from the studio will appear here for download or deletion."
+          description="Start recording yourself to see your recordings here."
         />
       ) : (
         <div className="grid gap-3">

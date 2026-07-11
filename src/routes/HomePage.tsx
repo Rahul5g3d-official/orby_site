@@ -1,4 +1,4 @@
-import { ArrowRight , Download,  Video } from "lucide-react";
+import { ArrowRight, Download, Video } from "lucide-react";
 import { Link } from "react-router-dom";
 import { cn } from "../utils/cn";
 
@@ -27,27 +27,28 @@ export function HomePage() {
             <div className="mt-8 grid gap-3 sm:flex sm:flex-wrap">
               <Link
                 to="/studio"
-                className={cn(heroLinkClass, "border-transparent bg-studio-accent text-white hover:bg-[#4F46E5]")}
+                className={cn(
+                  heroLinkClass,
+                  "border-transparent bg-studio-accent text-white hover:bg-[#4F46E5]",
+                )}
               >
                 <ArrowRight className="h-5 w-5 shrink-0" />
                 <span>Start Recording</span>
               </Link>
               <Link
                 to="/recordings"
-                className={cn(heroLinkClass, "border-studio-border bg-studio-card text-studio-text hover:bg-[#1D2940]")}
+                className={cn(
+                  heroLinkClass,
+                  "border-studio-border bg-studio-card text-studio-text hover:bg-[#1D2940]",
+                )}
               >
                 <Download className="h-5 w-5 shrink-0" />
                 <span>View Recordings</span>
               </Link>
             </div>
           </div>
-
         </div>
       </section>
-
-
-
-
     </main>
   );
 }
