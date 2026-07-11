@@ -1,5 +1,4 @@
 import {
-  AlertTriangle,
   Camera,
   CheckCircle2,
   Info,
@@ -44,7 +43,7 @@ import { saveRecording } from "../services/storageService";
 import type { AudioMode, AudioModeOption, LayoutOption, StudioLayout } from "../types/media";
 import { createCanvasComposition, type CanvasComposition } from "../utils/canvasComposer";
 import { cn } from "../utils/cn";
-import { getSecureContextMessage, isInsecureNetworkOrigin as checkInsecureNetworkOrigin } from "../utils/security";
+
 
 const layoutOptions: LayoutOption[] = [
   {
@@ -242,7 +241,6 @@ function hasLiveVideo(stream: MediaStream | null): boolean {
 
 export function StudioPage() {
   const supported = supportsRecordingApis();
-  const insecureNetworkOrigin = checkInsecureNetworkOrigin();
   const devices = useMediaDevices();
   const screen = useScreenCapture();
   const camera = useLocalCamera();
@@ -643,13 +641,6 @@ export function StudioPage() {
 
       <div className="mx-auto grid w-full max-w-[1320px] gap-4 px-3 py-4 sm:px-6 sm:py-6">
         <section className="flex flex-col gap-4 rounded-2xl border border-studio-border bg-gradient-to-br from-studio-panel to-studio-card p-4 shadow-studio sm:flex-row sm:items-center sm:justify-between sm:p-5">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-studio-cyan">Private browser studio</p>
-            <h1 className="mt-2 text-2xl font-semibold text-studio-text sm:text-3xl">Record your tab, camera, and voice</h1>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-studio-muted sm:text-base">
-              One webcam, captured tab audio, and every recording control in a focused local workflow.
-            </p>
-          </div>
           <Button
             variant="secondary"
             size="lg"
@@ -740,59 +731,6 @@ export function StudioPage() {
           />
         ) : null}
 
-        <section aria-label="Source previews" className="grid gap-4 lg:grid-cols-2">
-          <ScreenPreview stream={screen.stream} />
-          <CameraPreview stream={camera.stream} label="Webcam preview" />
-        </section>
-
-        <section className="grid gap-4 lg:grid-cols-2">
-          <Card className="rounded-2xl p-4 sm:p-5">
-            <h2 className="text-base font-semibold text-studio-text">Current setup</h2>
-            <div className="mt-4 grid gap-3 sm:grid-cols-3 lg:grid-cols-1 xl:grid-cols-3">
-              <div className="rounded-xl border border-studio-border bg-white/[0.03] p-3">
-                <p className="text-xs text-studio-muted">Shared source</p>
-                <p className="mt-1 text-sm font-medium text-studio-text">{hasScreen ? surfaceLabel : "Not selected"}</p>
-              </div>
-              <div className="rounded-xl border border-studio-border bg-white/[0.03] p-3">
-                <p className="text-xs text-studio-muted">Tab audio</p>
-                <p className={cn("mt-1 text-sm font-medium", screen.hasDisplayAudio ? "text-green-200" : "text-studio-text")}>
-                  {screen.hasDisplayAudio ? "Included" : "Not included"}
-                </p>
-              </div>
-              <div className="rounded-xl border border-studio-border bg-white/[0.03] p-3">
-                <p className="text-xs text-studio-muted">Microphone check</p>
-                <p className={cn("mt-1 text-sm font-medium", hasCompletedMicTest ? "text-green-200" : "text-studio-text")}>
-                  {!hasMicrophone ? "Mic off" : hasCompletedMicTest ? "Completed" : "Not run (optional)"}
-                </p>
-              </div>
-            </div>
-          </Card>
-
-          <Card className="rounded-2xl p-4 sm:p-5">
-            <div className="flex items-center gap-2 text-sm font-semibold text-studio-text">
-              <Info className="h-4 w-4 text-studio-cyan" />
-              Browser notes
-            </div>
-            <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6 text-studio-muted">
-              <li>Use desktop Chrome or Edge for the broadest capture and tab-audio support.</li>
-              <li>For Google Meet, choose Chrome Tab and enable Share tab audio.</li>
-              <li>Use headphones when adding your microphone to prevent echo.</li>
-              <li>Screen only records the shared track directly for reliable background capture.</li>
-            </ul>
-            {layout !== "screen-only" ? (
-              <div className="mt-4 flex gap-3 rounded-xl border border-amber-400/30 bg-amber-400/[0.08] p-3 text-sm leading-6 text-amber-100">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                Layouts with a webcam are composed by this page. Keep the studio visible while recording, or choose Screen only for a Meet tab in the foreground.
-              </div>
-            ) : null}
-            {insecureNetworkOrigin ? (
-              <div className="mt-4 flex gap-3 rounded-xl border border-studio-danger/35 bg-studio-danger/10 p-3 text-sm leading-6 text-red-100">
-                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
-                {getSecureContextMessage()}
-              </div>
-            ) : null}
-          </Card>
-        </section>
       </div>
 
       <StudioSetupSheet isOpen={isSetupOpen} onClose={() => setIsSetupOpen(false)} locked={sourcesLocked}>
