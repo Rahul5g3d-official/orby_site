@@ -16,13 +16,11 @@ import {
 import { useCallback, useEffect, useRef, useState, type KeyboardEvent } from "react";
 import { useBlocker } from "react-router-dom";
 import { AudioLevelMeter } from "../components/studio/AudioLevelMeter";
-import { CameraPreview } from "../components/studio/CameraPreview";
 import { DeviceSelector } from "../components/studio/DeviceSelector";
 import { LayoutSelector } from "../components/studio/LayoutSelector";
 import { MicrophoneVoiceTest } from "../components/studio/MicrophoneVoiceTest";
 import { RecordingControls } from "../components/studio/RecordingControls";
 import { RecordingReview } from "../components/studio/RecordingReview";
-import { ScreenPreview } from "../components/studio/ScreenPreview";
 import { StudioSetupSheet } from "../components/studio/StudioSetupSheet";
 import { Timer } from "../components/studio/Timer";
 import { VoiceModeSelector } from "../components/studio/VoiceModeSelector";
@@ -560,7 +558,6 @@ export function StudioPage() {
         createdAt: createdAt.toISOString(),
         durationMs: recorder.result.durationMs,
         size: recorder.result.blob.size,
-        type: recorder.result.blob.type,
         blob: recorder.result.blob,
       });
       setIsSavedToLibrary(true);

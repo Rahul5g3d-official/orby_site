@@ -6,7 +6,6 @@ export interface StoredRecording {
   createdAt: string;
   durationMs: number;
   size: number;
-  type: string;
   blob: Blob;
 }
 

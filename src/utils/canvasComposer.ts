@@ -19,9 +19,7 @@ export interface CanvasComposition {
 }
 
 interface VideoSource {
-  id: string;
   label: string;
-  stream: MediaStream;
   video: HTMLVideoElement;
 }
 
@@ -223,18 +221,14 @@ export async function createCanvasComposition(options: CanvasCompositionOptions)
 
     if (screenTrack && options.screenStream) {
       screen = {
-        id: "screen",
         label: "Screen",
-        stream: options.screenStream,
         video: await createVideoElement(options.screenStream),
       };
     }
 
     if (cameraTrack && options.localCameraStream) {
       camera = {
-        id: "webcam",
         label: "Webcam",
-        stream: options.localCameraStream,
         video: await createVideoElement(options.localCameraStream),
       };
     }

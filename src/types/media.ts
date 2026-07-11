@@ -23,12 +23,6 @@ export interface AudioModeOption {
 
 export interface MediaDeviceOption {
   deviceId: string;
-  groupId: string;
   kind: MediaDeviceKind;
   label: string;
-}
-
-export interface MediaError {
-  source: "camera" | "microphone" | "screen" | "recorder" | "storage";
-  message: string;
 }

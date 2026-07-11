@@ -20,7 +20,6 @@ export async function listMediaDevices(): Promise<MediaDeviceOption[]> {
     .filter((device) => device.kind === "audioinput" || device.kind === "videoinput")
     .map((device, index) => ({
       deviceId: device.deviceId,
-      groupId: device.groupId,
       kind: device.kind,
       label: device.label || `${device.kind === "videoinput" ? "Camera" : "Microphone"} ${index + 1}`,
     }));

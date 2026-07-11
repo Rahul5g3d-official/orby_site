@@ -38,7 +38,6 @@ export function useMediaDevices() {
   );
 
   return {
-    devices,
     cameras,
     microphones,
     isLoading,
