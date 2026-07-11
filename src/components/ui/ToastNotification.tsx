@@ -1,9 +1,10 @@
-import { AlertCircle, CheckCircle2, Info } from "lucide-react";
+import { AlertCircle, CheckCircle2, Info, X } from "lucide-react";
 import { cn } from "../../utils/cn";
 
 interface ToastNotificationProps {
   type?: "info" | "success" | "error";
   message: string | null;
+  onDismiss?: () => void;
 }
 
 const iconMap = {
@@ -12,7 +13,7 @@ const iconMap = {
   error: AlertCircle,
 };
 
-export function ToastNotification({ type = "info", message }: ToastNotificationProps) {
+export function ToastNotification({ type = "info", message, onDismiss }: ToastNotificationProps) {
   if (!message) return null;
 
   const Icon = iconMap[type];
@@ -30,7 +31,17 @@ export function ToastNotification({ type = "info", message }: ToastNotificationP
       )}
     >
       <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-      <span>{message}</span>
+      <span className="min-w-0 flex-1">{message}</span>
+      {onDismiss ? (
+        <button
+          type="button"
+          onClick={onDismiss}
+          className="-m-1 shrink-0 rounded-md p-1 text-current/70 transition hover:bg-white/10 hover:text-current focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-studio-cyan"
+          aria-label="Dismiss notification"
+        >
+          <X className="h-4 w-4" aria-hidden="true" />
+        </button>
+      ) : null}
     </div>
   );
 }

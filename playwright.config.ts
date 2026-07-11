@@ -1,6 +1,7 @@
 import { defineConfig, devices } from "@playwright/test";
 
-const baseURL = "https://127.0.0.1:5173";
+const externalBaseURL = process.env.E2E_BASE_URL;
+const baseURL = externalBaseURL || "https://127.0.0.1:5173";
 
 const edgeLaunchOptions = {
   args: [
@@ -44,11 +45,13 @@ export default defineConfig({
       },
     },
   ],
-  webServer: {
-    command: "npm run dev:vite -- --host 127.0.0.1",
-    url: baseURL,
-    ignoreHTTPSErrors: true,
-    reuseExistingServer: true,
-    timeout: 120_000,
-  },
+  webServer: externalBaseURL
+    ? undefined
+    : {
+        command: "npm run dev:vite -- --host 127.0.0.1",
+        url: baseURL,
+        ignoreHTTPSErrors: true,
+        reuseExistingServer: true,
+        timeout: 120_000,
+      },
 });

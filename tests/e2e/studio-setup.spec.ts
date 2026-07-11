@@ -80,7 +80,7 @@ test("the single-webcam setup retains every layout, voice mode, and microphone-t
   for (const name of layoutNames) {
     await expect(layouts.getByRole("radio", { name: new RegExp(`^${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`) })).toHaveCount(1);
   }
-  await expect(layouts.getByRole("radio", { name: /^Screen \+ face bubble\b/ })).toBeChecked();
+  await expect(layouts.getByRole("radio", { name: /^Screen only\b/ })).toBeChecked();
   await dialog.getByText("Picture-in-picture", { exact: true }).click();
   await expect(layouts.getByRole("radio", { name: /^Picture-in-picture\b/ })).toBeChecked();
 
@@ -127,6 +127,7 @@ test("changing voice mode requires a fresh recorded and played microphone sample
   await page.getByRole("button", { name: /Studio setup/ }).click();
   const dialog = page.getByRole("dialog", { name: "Studio setup" });
 
+  await dialog.getByText("Face camera only", { exact: true }).click();
   await dialog.getByRole("button", { name: "Enable webcam", exact: true }).click();
   await expect(dialog.getByRole("button", { name: "Turn off webcam", exact: true })).toBeVisible();
   await dialog.getByRole("button", { name: "Enable microphone", exact: true }).click();

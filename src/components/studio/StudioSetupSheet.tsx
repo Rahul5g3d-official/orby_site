@@ -86,11 +86,14 @@ export function StudioSetupSheet({ isOpen, onClose, locked, children }: StudioSe
     };
   }, [isOpen]);
 
-  if (!isOpen) return null;
-
   return createPortal(
     <div
-      className="fixed inset-0 z-[60] bg-black/70 backdrop-blur-[2px] sm:flex sm:justify-end"
+      aria-hidden={!isOpen}
+      className={
+        isOpen
+          ? "fixed inset-0 z-[60] bg-black/70 backdrop-blur-[2px] sm:flex sm:justify-end"
+          : "hidden"
+      }
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}

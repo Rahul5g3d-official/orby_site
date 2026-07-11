@@ -15,6 +15,7 @@ import {
   VolumeX,
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useBlocker } from "react-router-dom";
 import { AudioLevelMeter } from "../components/studio/AudioLevelMeter";
 import { CameraPreview } from "../components/studio/CameraPreview";
 import { DeviceSelector } from "../components/studio/DeviceSelector";
@@ -250,8 +251,9 @@ export function StudioPage() {
   const [isSetupOpen, setIsSetupOpen] = useState(false);
   const [selectedCameraId, setSelectedCameraId] = useState("");
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState("");
-  const [layout, setLayout] = useState<StudioLayout>("screen-bubble");
+  const [layout, setLayout] = useState<StudioLayout>("screen-only");
   const [audioMode, setAudioMode] = useState<AudioMode>("voice-boost");
+  const [isPreparingRecording, setIsPreparingRecording] = useState(false);
   const [allowSilentScreen, setAllowSilentScreen] = useState(false);
   const [micTestResult, setMicTestResult] = useState<MicrophoneTestResult | null>(null);
   const [hasPlayedMicTest, setHasPlayedMicTest] = useState(false);
@@ -259,22 +261,48 @@ export function StudioPage() {
   const [isSavedToLibrary, setIsSavedToLibrary] = useState(false);
   const [isSavingRecording, setIsSavingRecording] = useState(false);
   const [toast, setToast] = useState<{ type: "info" | "success" | "error"; message: string } | null>(null);
+  const [dismissedErrors, setDismissedErrors] = useState<string[]>([]);
+  const startInFlightRef = useRef(false);
+  const isRecordingActive = recorder.status === "recording" || recorder.status === "paused";
+  const navigationBlocker = useBlocker(isRecordingActive || isPreparingRecording);
 
   useEffect(() => {
-    if (!selectedCameraId && devices.cameras[0]) setSelectedCameraId(devices.cameras[0].deviceId);
-  }, [devices.cameras, selectedCameraId]);
+    if (devices.isLoading) return;
+    const selectedStillExists = devices.cameras.some((device) => device.deviceId === selectedCameraId);
+    if (!selectedStillExists) setSelectedCameraId(devices.cameras[0]?.deviceId || "");
+  }, [devices.cameras, devices.isLoading, selectedCameraId]);
 
   useEffect(() => {
-    if (!selectedMicrophoneId && devices.microphones[0]) {
-      setSelectedMicrophoneId(devices.microphones[0].deviceId);
-    }
-  }, [devices.microphones, selectedMicrophoneId]);
+    if (devices.isLoading) return;
+    const selectedStillExists = devices.microphones.some((device) => device.deviceId === selectedMicrophoneId);
+    if (!selectedStillExists) setSelectedMicrophoneId(devices.microphones[0]?.deviceId || "");
+  }, [devices.isLoading, devices.microphones, selectedMicrophoneId]);
 
   useEffect(() => {
     if (!toast) return;
     const timeout = window.setTimeout(() => setToast(null), 5000);
     return () => window.clearTimeout(timeout);
   }, [toast]);
+
+  useEffect(() => {
+    if (navigationBlocker.state !== "blocked") return;
+    setToast({ type: "error", message: "Wait for setup to finish or stop the recording before leaving the studio." });
+    navigationBlocker.reset();
+  }, [navigationBlocker]);
+
+  useEffect(() => {
+    if (!isRecordingActive && !isPreparingRecording) return;
+
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isPreparingRecording, isRecordingActive]);
 
   useEffect(() => {
     return () => {
@@ -289,8 +317,7 @@ export function StudioPage() {
     microphone.stream?.getAudioTracks().some((track) => track.readyState === "live"),
   );
   const activeSourceCount = [hasScreen, hasCamera].filter(Boolean).length;
-  const isRecordingActive = recorder.status === "recording" || recorder.status === "paused";
-  const sourcesLocked = isRecordingActive;
+  const sourcesLocked = isRecordingActive || isPreparingRecording;
   const micTestIsCurrent =
     !hasMicrophone || (Boolean(micTestResult) && micTestResult?.audioMode === audioMode && hasPlayedMicTest);
   const layoutSourcesReady =
@@ -321,10 +348,19 @@ export function StudioPage() {
     layoutSourcesReady &&
     screenAudioApproved &&
     micTestIsCurrent &&
+    !isPreparingRecording &&
     !isRecordingActive &&
     recorder.status !== "recording";
   const setupIssueCount = [!layoutSourcesReady, !screenAudioApproved, !micTestIsCurrent, !supported].filter(Boolean).length;
-  const combinedError = screen.error || camera.error || microphone.error || recorder.error || devices.error || null;
+  const mediaErrors = [screen.error, camera.error, microphone.error, recorder.error, devices.error].filter(
+    (message): message is string => Boolean(message),
+  );
+  const combinedError = mediaErrors[0] || null;
+  const visibleCombinedError = mediaErrors.find((message) => !dismissedErrors.includes(message)) || null;
+
+  useEffect(() => {
+    if (!combinedError && dismissedErrors.length > 0) setDismissedErrors([]);
+  }, [combinedError, dismissedErrors.length]);
 
   const refreshAfterPermission = async () => {
     await devices.refreshDevices();
@@ -368,12 +404,15 @@ export function StudioPage() {
   };
 
   const handleStartRecording = async () => {
+    if (startInFlightRef.current) return;
     if (!canStartRecording) {
       setToast({ type: "error", message: readinessMessage });
       setIsSetupOpen(true);
       return;
     }
 
+    startInFlightRef.current = true;
+    setIsPreparingRecording(true);
     if (recorder.result) recorder.resetRecording();
     setHasPlayedPreview(false);
     setIsSavedToLibrary(false);
@@ -408,6 +447,9 @@ export function StudioPage() {
         type: "error",
         message: caughtError instanceof Error ? caughtError.message : "Unable to prepare the recording.",
       });
+    } finally {
+      startInFlightRef.current = false;
+      setIsPreparingRecording(false);
     }
   };
 
@@ -561,8 +603,12 @@ export function StudioPage() {
   return (
     <main className="min-h-[calc(100svh-4rem)]">
       <ToastNotification
-        type={toast ? toast.type : combinedError ? "error" : undefined}
-        message={toast?.message || combinedError}
+        type={toast ? toast.type : visibleCombinedError ? "error" : undefined}
+        message={toast?.message || visibleCombinedError}
+        onDismiss={() => {
+          if (toast) setToast(null);
+          else if (visibleCombinedError) setDismissedErrors((current) => [...current, visibleCombinedError]);
+        }}
       />
 
       <div className="mx-auto grid w-full max-w-[1320px] gap-4 px-3 py-4 sm:px-6 sm:py-6">
@@ -638,7 +684,13 @@ export function StudioPage() {
             ) : (
               <Info className="mt-1 h-4 w-4 shrink-0" />
             )}
-            <span>{isRecordingActive ? "Recording is in progress. Setup controls are locked." : readinessMessage}</span>
+            <span>
+              {isRecordingActive
+                ? "Recording is in progress. Setup controls are locked."
+                : isPreparingRecording
+                  ? "Preparing the selected sources and audio mix…"
+                  : readinessMessage}
+            </span>
           </div>
         </Card>
 
@@ -694,6 +746,12 @@ export function StudioPage() {
               <li>Use headphones when adding your microphone to prevent echo.</li>
               <li>Screen only records the shared track directly for reliable background capture.</li>
             </ul>
+            {layout !== "screen-only" ? (
+              <div className="mt-4 flex gap-3 rounded-xl border border-amber-400/30 bg-amber-400/[0.08] p-3 text-sm leading-6 text-amber-100">
+                <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
+                Layouts with a webcam are composed by this page. Keep the studio visible while recording, or choose Screen only for a Meet tab in the foreground.
+              </div>
+            ) : null}
             {insecureNetworkOrigin ? (
               <div className="mt-4 flex gap-3 rounded-xl border border-studio-danger/35 bg-studio-danger/10 p-3 text-sm leading-6 text-red-100">
                 <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0" />
