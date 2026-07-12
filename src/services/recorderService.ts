@@ -3,6 +3,8 @@ const MIME_TYPES = [
   "video/webm;codecs=vp8,opus",
   "video/webm;codecs=h264,opus",
   "video/webm",
+  "video/mp4;codecs=avc1.42E01E,mp4a.40.2",
+  "video/mp4",
 ];
 
 export function getSupportedRecorderMimeType(): string {
@@ -16,9 +18,13 @@ export function createMediaRecorder(stream: MediaStream): MediaRecorder {
   return new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
 }
 
-export function buildRecordingFilename(createdAt = new Date()): string {
+export function buildRecordingFilename(
+  createdAt = new Date(),
+  mimeType = "video/webm",
+): string {
   const date = createdAt.toISOString().slice(0, 10);
-  return `screen-recording-${date}.webm`;
+  const extension = mimeType.includes("mp4") ? "mp4" : "webm";
+  return `screen-recording-${date}.${extension}`;
 }
 
 export function downloadBlob(blob: Blob, filename: string): void {
@@ -29,5 +35,5 @@ export function downloadBlob(blob: Blob, filename: string): void {
   document.body.append(link);
   link.click();
   link.remove();
-  URL.revokeObjectURL(url);
+  window.setTimeout(() => URL.revokeObjectURL(url), 1_000);
 }

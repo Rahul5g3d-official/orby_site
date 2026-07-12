@@ -3,6 +3,7 @@ import { createMockStream } from "../test/mediaMocks";
 import {
   buildRecordingFilename,
   createMediaRecorder,
+  downloadBlob,
   getSupportedRecorderMimeType,
 } from "./recorderService";
 
@@ -57,6 +58,14 @@ describe("recorderService", () => {
     expect(recorder.options).toBeUndefined();
   });
 
+  it("uses MP4 when the browser does not support WebM recording", () => {
+    MockMediaRecorder.isTypeSupported.mockImplementation(
+      (mimeType) => mimeType === "video/mp4",
+    );
+
+    expect(getSupportedRecorderMimeType()).toBe("video/mp4");
+  });
+
   it("passes the selected MIME type to MediaRecorder", () => {
     MockMediaRecorder.isTypeSupported.mockImplementation(
       (mimeType) => mimeType === "video/webm",
@@ -75,5 +84,36 @@ describe("recorderService", () => {
     expect(buildRecordingFilename(createdAt)).toBe(
       "screen-recording-2026-07-11.webm",
     );
+  });
+
+  it("uses an MP4 filename for an MP4 recording", () => {
+    const createdAt = new Date("2026-07-11T23:59:59.000Z");
+
+    expect(buildRecordingFilename(createdAt, "video/mp4")).toBe(
+      "screen-recording-2026-07-11.mp4",
+    );
+  });
+
+  it("delays object URL cleanup until a mobile download has started", () => {
+    vi.useFakeTimers();
+    const revokeObjectURL = vi.fn();
+    Object.defineProperty(URL, "createObjectURL", {
+      configurable: true,
+      value: vi.fn(() => "blob:recording"),
+    });
+    Object.defineProperty(URL, "revokeObjectURL", {
+      configurable: true,
+      value: revokeObjectURL,
+    });
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(
+      () => undefined,
+    );
+
+    downloadBlob(new Blob(["recording"], { type: "video/mp4" }), "video.mp4");
+
+    expect(revokeObjectURL).not.toHaveBeenCalled();
+    vi.advanceTimersByTime(1_000);
+    expect(revokeObjectURL).toHaveBeenCalledWith("blob:recording");
+    vi.useRealTimers();
   });
 });

@@ -3,8 +3,16 @@ import { createMockStream } from "../test/mediaMocks";
 import {
   getMediaErrorMessage,
   requestScreen,
-  supportsRecordingApis,
+  supportsDisplayCapture,
+  supportsRecordingLayout,
 } from "./mediaService";
+
+const composedLayouts = [
+  "screen-bubble",
+  "screen-side",
+  "grid",
+  "pip",
+] as const;
 
 describe("mediaService", () => {
   const getUserMedia = vi.fn();
@@ -29,15 +37,50 @@ describe("mediaService", () => {
     });
   });
 
-  it("detects full recording support and reports a missing required API", () => {
-    expect(supportsRecordingApis()).toBe(true);
+  it("reports full support for direct and composed recording layouts", () => {
+    expect(supportsDisplayCapture()).toBe(true);
+    expect(supportsRecordingLayout("camera-only")).toBe(true);
+    expect(supportsRecordingLayout("screen-only")).toBe(true);
+    for (const layout of composedLayouts) {
+      expect(supportsRecordingLayout(layout)).toBe(true);
+    }
+  });
 
+  it("keeps direct camera recording available without display capture", () => {
     Object.defineProperty(navigator, "mediaDevices", {
       configurable: true,
       value: { getUserMedia },
     });
 
-    expect(supportsRecordingApis()).toBe(false);
+    expect(supportsDisplayCapture()).toBe(false);
+    expect(supportsRecordingLayout("camera-only")).toBe(true);
+    expect(supportsRecordingLayout("screen-only")).toBe(false);
+    for (const layout of composedLayouts) {
+      expect(supportsRecordingLayout(layout)).toBe(false);
+    }
+  });
+
+  it("requires canvas capture only for composed layouts", () => {
+    Object.defineProperty(HTMLCanvasElement.prototype, "captureStream", {
+      configurable: true,
+      writable: true,
+      value: undefined,
+    });
+
+    expect(supportsRecordingLayout("camera-only")).toBe(true);
+    expect(supportsRecordingLayout("screen-only")).toBe(true);
+    for (const layout of composedLayouts) {
+      expect(supportsRecordingLayout(layout)).toBe(false);
+    }
+  });
+
+  it("rejects camera recording when user-media capture is unavailable", () => {
+    Object.defineProperty(navigator, "mediaDevices", {
+      configurable: true,
+      value: { getDisplayMedia },
+    });
+
+    expect(supportsRecordingLayout("camera-only")).toBe(false);
   });
 
   it("requests a browser surface with tab audio and source switching enabled", async () => {

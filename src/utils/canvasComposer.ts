@@ -247,6 +247,11 @@ export async function createCanvasComposition(
       return createOutputWithAudio(screenTrack, mixedAudio);
     }
 
+    if (options.layout === "camera-only") {
+      if (!cameraTrack) throw new Error("Enable a webcam before recording.");
+      return createOutputWithAudio(cameraTrack, mixedAudio);
+    }
+
     if (!screenTrack && !cameraTrack)
       throw new Error(
         "Choose a screen or enable your webcam before recording.",

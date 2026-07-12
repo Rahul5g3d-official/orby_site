@@ -41,7 +41,10 @@ import { useMicrophone } from "../hooks/useMicrophone";
 import type { MicrophoneTestResult } from "../hooks/useMicrophoneTest";
 import { useRecorder } from "../hooks/useRecorder";
 import { useScreenCapture } from "../hooks/useScreenCapture";
-import { supportsRecordingApis } from "../services/mediaService";
+import {
+  supportsDisplayCapture,
+  supportsRecordingLayout,
+} from "../services/mediaService";
 import {
   buildRecordingFilename,
   downloadBlob,
@@ -287,7 +290,7 @@ function hasLiveVideo(stream: MediaStream | null): boolean {
 }
 
 export function StudioPage() {
-  const supported = supportsRecordingApis();
+  const displayCaptureSupported = supportsDisplayCapture();
   const devices = useMediaDevices();
   const screen = useScreenCapture();
   const camera = useLocalCamera();
@@ -306,7 +309,11 @@ export function StudioPage() {
     useState<SetupSection>("sources");
   const [selectedCameraId, setSelectedCameraId] = useState("");
   const [selectedMicrophoneId, setSelectedMicrophoneId] = useState("");
-  const [layout, setLayout] = useState<StudioLayout>("screen-only");
+  const [layout, setLayout] = useState<StudioLayout>(
+    () =>
+      layoutOptions.find((option) => supportsRecordingLayout(option.id))?.id ||
+      "screen-only",
+  );
   const [audioMode, setAudioMode] = useState<AudioMode>("voice-boost");
   const [isPreparingRecording, setIsPreparingRecording] = useState(false);
   const [allowSilentScreen, setAllowSilentScreen] = useState(false);
@@ -392,6 +399,10 @@ export function StudioPage() {
   );
   const activeSourceCount = [hasScreen, hasCamera].filter(Boolean).length;
   const sourcesLocked = isRecordingActive || isPreparingRecording;
+  const layoutSupported = supportsRecordingLayout(layout);
+  const supportedLayoutOptions = layoutOptions.filter((option) =>
+    supportsRecordingLayout(option.id),
+  );
   const hasCompletedMicTest = Boolean(
     hasMicrophone && micTestResult?.audioMode === audioMode && hasPlayedMicTest,
   );
@@ -405,7 +416,7 @@ export function StudioPage() {
     !hasScreen || screen.hasDisplayAudio || allowSilentScreen;
 
   let readinessMessage = "Ready to record.";
-  if (!supported)
+  if (!layoutSupported)
     readinessMessage =
       "This browser is missing one or more required recording APIs.";
   else if (!layoutSourcesReady) {
@@ -421,7 +432,7 @@ export function StudioPage() {
   }
 
   const canStartRecording =
-    supported &&
+    layoutSupported &&
     layoutSourcesReady &&
     screenAudioApproved &&
     !isPreparingRecording &&
@@ -430,7 +441,7 @@ export function StudioPage() {
   const setupIssueCount = [
     !layoutSourcesReady,
     !screenAudioApproved,
-    !supported,
+    !layoutSupported,
   ].filter(Boolean).length;
   const mediaErrors = [
     screen.error,
@@ -524,7 +535,7 @@ export function StudioPage() {
       setToast({
         type: "success",
         message:
-          composition.mode === "direct"
+          composition.mode === "direct" && layout === "screen-only"
             ? "Direct tab recording started. The shared tab can stay in the foreground."
             : "Recording started with your selected layout.",
       });
@@ -658,7 +669,7 @@ export function StudioPage() {
 
     setIsSavingRecording(true);
     const createdAt = new Date();
-    const name = buildRecordingFilename(createdAt);
+    const name = buildRecordingFilename(createdAt, recorder.result.blob.type);
     try {
       await saveRecording({
         id: crypto.randomUUID(),
@@ -685,7 +696,10 @@ export function StudioPage() {
 
   const handleDownload = () => {
     if (!recorder.result || !hasPlayedPreview) return;
-    downloadBlob(recorder.result.blob, buildRecordingFilename());
+    downloadBlob(
+      recorder.result.blob,
+      buildRecordingFilename(new Date(), recorder.result.blob.type),
+    );
   };
 
   const handleResetRecording = () => {
@@ -922,75 +936,77 @@ export function StudioPage() {
           </div>
 
           <div className="mt-5 grid gap-5">
-            <div>
-              <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="text-sm font-medium text-studio-text">
-                  Tab, window, or screen
-                </span>
-                {screen.stream ? (
-                  <StatusBadge status="connected">{surfaceLabel}</StatusBadge>
-                ) : null}
-              </div>
-              <Button
-                variant="secondary"
-                icon={<MonitorUp className="h-4 w-4" />}
-                isLoading={screen.isLoading}
-                disabled={sourcesLocked}
-                onClick={() => void handleSelectScreen()}
-                className="w-full"
-              >
-                {screen.stream
-                  ? "Change shared source"
-                  : "Choose shared source"}
-              </Button>
-              {screen.stream ? (
+            {displayCaptureSupported ? (
+              <div>
+                <div className="mb-2 flex items-center justify-between gap-2">
+                  <span className="text-sm font-medium text-studio-text">
+                    Tab, window, or screen
+                  </span>
+                  {screen.stream ? (
+                    <StatusBadge status="connected">{surfaceLabel}</StatusBadge>
+                  ) : null}
+                </div>
                 <Button
-                  variant="ghost"
-                  icon={<StopCircle className="h-4 w-4" />}
+                  variant="secondary"
+                  icon={<MonitorUp className="h-4 w-4" />}
+                  isLoading={screen.isLoading}
                   disabled={sourcesLocked}
-                  onClick={screen.stopScreen}
-                  className="mt-2 w-full"
+                  onClick={() => void handleSelectScreen()}
+                  className="w-full"
                 >
-                  Stop sharing
+                  {screen.stream
+                    ? "Change shared source"
+                    : "Choose shared source"}
                 </Button>
-              ) : null}
+                {screen.stream ? (
+                  <Button
+                    variant="ghost"
+                    icon={<StopCircle className="h-4 w-4" />}
+                    disabled={sourcesLocked}
+                    onClick={screen.stopScreen}
+                    className="mt-2 w-full"
+                  >
+                    Stop sharing
+                  </Button>
+                ) : null}
 
-              {screen.stream ? (
-                screen.hasDisplayAudio ? (
-                  <div className="mt-3 flex items-start gap-2 rounded-xl border border-studio-success/30 bg-studio-success/10 p-3 text-xs leading-5 text-green-100">
-                    <Volume2 className="mt-0.5 h-4 w-4 shrink-0" />
-                    <span>
-                      <strong>Tab audio included.</strong> Shared sound will be
-                      mixed into the recording.
-                    </span>
-                  </div>
-                ) : (
-                  <div className="mt-3 rounded-xl border border-amber-400/35 bg-amber-400/10 p-3 text-xs leading-5 text-amber-100">
-                    <div className="flex items-start gap-2">
-                      <VolumeX className="mt-0.5 h-4 w-4 shrink-0" />
+                {screen.stream ? (
+                  screen.hasDisplayAudio ? (
+                    <div className="mt-3 flex items-start gap-2 rounded-xl border border-studio-success/30 bg-studio-success/10 p-3 text-xs leading-5 text-green-100">
+                      <Volume2 className="mt-0.5 h-4 w-4 shrink-0" />
                       <span>
-                        <strong>No shared audio.</strong> Reselect a browser tab
-                        and enable Share tab audio.
+                        <strong>Tab audio included.</strong> Shared sound will
+                        be mixed into the recording.
                       </span>
                     </div>
-                    {!allowSilentScreen ? (
-                      <button
-                        type="button"
-                        disabled={sourcesLocked}
-                        className="mt-2 font-semibold text-amber-50 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 disabled:opacity-50"
-                        onClick={() => setAllowSilentScreen(true)}
-                      >
-                        Continue without tab audio
-                      </button>
-                    ) : (
-                      <p className="mt-2 font-medium">
-                        Silent shared-source recording approved.
-                      </p>
-                    )}
-                  </div>
-                )
-              ) : null}
-            </div>
+                  ) : (
+                    <div className="mt-3 rounded-xl border border-amber-400/35 bg-amber-400/10 p-3 text-xs leading-5 text-amber-100">
+                      <div className="flex items-start gap-2">
+                        <VolumeX className="mt-0.5 h-4 w-4 shrink-0" />
+                        <span>
+                          <strong>No shared audio.</strong> Reselect a browser
+                          tab and enable Share tab audio.
+                        </span>
+                      </div>
+                      {!allowSilentScreen ? (
+                        <button
+                          type="button"
+                          disabled={sourcesLocked}
+                          className="mt-2 font-semibold text-amber-50 underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300 disabled:opacity-50"
+                          onClick={() => setAllowSilentScreen(true)}
+                        >
+                          Continue without tab audio
+                        </button>
+                      ) : (
+                        <p className="mt-2 font-medium">
+                          Silent shared-source recording approved.
+                        </p>
+                      )}
+                    </div>
+                  )
+                ) : null}
+              </div>
+            ) : null}
 
             <div className="grid gap-3 border-t border-studio-border pt-5">
               <DeviceSelector
@@ -1083,7 +1099,7 @@ export function StudioPage() {
             Choose the composition
           </h3>
           <LayoutSelector
-            layouts={layoutOptions}
+            layouts={supportedLayoutOptions}
             value={layout}
             onChange={setLayout}
             disabled={sourcesLocked}

@@ -99,3 +99,22 @@ test("the core visual flow stays inside desktop and mobile viewports", async ({
   ).toBeVisible();
   await expectNoHorizontalPageOverflow(page);
 });
+
+test("the footer information pages stay inside desktop and mobile viewports", async ({
+  page,
+}) => {
+  for (const route of [
+    { path: "/privacy", heading: "Privacy & Local Data" },
+    { path: "/open-source", heading: "Open Source" },
+  ]) {
+    await page.goto(route.path);
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: route.heading,
+        exact: true,
+      }),
+    ).toBeVisible();
+    await expectNoHorizontalPageOverflow(page);
+  }
+});
