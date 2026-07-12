@@ -21,6 +21,65 @@ test.beforeEach(async ({ page }) => {
   await page.goto("/studio");
 });
 
+test("mobile records directly from the webcam when display capture is unavailable", async ({
+  page,
+}, testInfo) => {
+  test.skip(
+    testInfo.project.name !== "edge-mobile",
+    "The fallback applies to mobile browsers without display capture.",
+  );
+
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator.mediaDevices, "getDisplayMedia", {
+      configurable: true,
+      value: undefined,
+    });
+  });
+  await page.reload();
+
+  expect(
+    await page.evaluate(() => typeof navigator.mediaDevices.getDisplayMedia),
+  ).toBe("undefined");
+
+  await page.getByRole("button", { name: /Studio setup/ }).click();
+  const dialog = page.getByRole("dialog", { name: "Studio setup" });
+
+  await expect(
+    dialog.getByRole("button", { name: "Choose shared source", exact: true }),
+  ).toHaveCount(0);
+
+  await dialog.getByRole("tab", { name: "Layout", exact: true }).click();
+  const layouts = dialog.getByRole("group", { name: "Recording layout" });
+  await expect(layouts.getByRole("radio")).toHaveCount(1);
+  await expect(
+    layouts.getByRole("radio", { name: /^Face camera only\b/ }),
+  ).toBeChecked();
+
+  await dialog.getByRole("tab", { name: "Sources", exact: true }).click();
+  await dialog
+    .getByRole("button", { name: "Enable webcam", exact: true })
+    .click();
+  await expect(
+    dialog.getByRole("button", { name: "Turn off webcam", exact: true }),
+  ).toBeVisible();
+  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+
+  const start = page.getByRole("button", { name: "Start", exact: true });
+  const stop = page.getByRole("button", { name: "Stop", exact: true });
+  await expect(start).toBeEnabled();
+  await expect(
+    page.getByText("Ready to record.", { exact: true }),
+  ).toBeVisible();
+
+  await start.click();
+  await expect(start).toBeDisabled();
+  await expect(stop).toBeEnabled();
+
+  await stop.click();
+  await expect(stop).toBeDisabled();
+  await expect(start).toBeEnabled();
+});
+
 test("the setup sheet is modal, focus-contained, and restores focus when closed", async ({
   page,
 }) => {

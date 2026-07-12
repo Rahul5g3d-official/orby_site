@@ -31,7 +31,11 @@ export function RecordingsPage() {
   const handleDownload = (recording: StoredRecording) => {
     downloadBlob(
       recording.blob,
-      recording.name || buildRecordingFilename(new Date(recording.createdAt)),
+      recording.name ||
+        buildRecordingFilename(
+          new Date(recording.createdAt),
+          recording.blob.type,
+        ),
     );
   };
 

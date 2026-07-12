@@ -1,11 +1,30 @@
-import type { MediaDeviceOption } from "../types/media";
+import type { MediaDeviceOption, StudioLayout } from "../types/media";
 
-export function supportsRecordingApis(): boolean {
-  return Boolean(
-    typeof navigator.mediaDevices?.getUserMedia === "function" &&
-    typeof navigator.mediaDevices?.getDisplayMedia === "function" &&
+function supportsRecorderPrimitives(): boolean {
+  return (
     typeof window.MediaRecorder === "function" &&
-    typeof window.MediaStream === "function" &&
+    typeof window.MediaStream === "function"
+  );
+}
+
+export function supportsDisplayCapture(): boolean {
+  return typeof navigator.mediaDevices?.getDisplayMedia === "function";
+}
+
+export function supportsRecordingLayout(layout: StudioLayout): boolean {
+  if (!supportsRecorderPrimitives()) return false;
+
+  if (layout === "camera-only") {
+    return typeof navigator.mediaDevices?.getUserMedia === "function";
+  }
+
+  if (layout === "screen-only") {
+    return supportsDisplayCapture();
+  }
+
+  return Boolean(
+    supportsDisplayCapture() &&
+    typeof HTMLCanvasElement !== "undefined" &&
     typeof HTMLCanvasElement.prototype.captureStream === "function",
   );
 }

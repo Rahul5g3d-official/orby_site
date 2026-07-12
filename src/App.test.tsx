@@ -46,4 +46,25 @@ describe("App data-router integration", () => {
     ).toHaveAttribute("aria-haspopup", "dialog");
     expect(screen.queryByText(/phone camera|QR code/i)).not.toBeInTheDocument();
   });
+
+  it.each([
+    ["/privacy", "Privacy & Local Data"],
+    ["/open-source", "Open Source"],
+  ])("renders the %s information route", async (path, heading) => {
+    const router = createMemoryRouter([{ path: "*", element: <App /> }], {
+      initialEntries: [path],
+    });
+
+    render(
+      <RouterProvider router={router} future={{ v7_startTransition: true }} />,
+    );
+
+    expect(
+      await screen.findByRole("heading", {
+        level: 1,
+        name: heading,
+      }),
+    ).toBeVisible();
+    expect(screen.getByRole("contentinfo")).toBeVisible();
+  });
 });
