@@ -1,4 +1,4 @@
-import { Camera, LayoutDashboard, Library, Video } from "lucide-react";
+import { Camera, LayoutDashboard, Library } from "lucide-react";
 import { NavLink } from "react-router-dom";
 import { cn } from "../../utils/cn";
 
@@ -14,14 +14,18 @@ export function Navbar() {
       <div className="mx-auto flex min-h-16 max-w-[1480px] items-center justify-between gap-3 px-3 py-2 sm:px-6">
         <NavLink
           to="/"
-          aria-label="Screen Recorder home"
+          aria-label="Orby home"
           className="flex min-w-0 items-center gap-3 text-studio-text"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-studio-accent">
-            <Video className="h-5 w-5" />
-          </span>
+          <img
+            src="/orby-icon.svg"
+            alt=""
+            className="h-9 w-9 shrink-0 rounded-lg"
+            width="36"
+            height="36"
+          />
           <span className="truncate text-sm font-semibold sm:text-base">
-            framesync
+            orby
           </span>
         </NavLink>
         <nav

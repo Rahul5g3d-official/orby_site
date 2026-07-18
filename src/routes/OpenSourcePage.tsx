@@ -11,7 +11,7 @@ export function OpenSourcePage() {
           Open Source
         </h1>
         <p className="mt-3 text-sm leading-6 text-studio-muted sm:text-base">
-          FrameSync is an open-source, browser-based recording platform.
+          Orby is an open-source, browser-based recording platform.
         </p>
       </header>
 
@@ -32,7 +32,7 @@ export function OpenSourcePage() {
                 rel="noreferrer"
                 className={linkClassName}
               >
-                View FrameSync on GitHub
+                View Orby on GitHub
               </a>
             </p>
           </section>

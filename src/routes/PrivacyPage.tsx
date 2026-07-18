@@ -8,8 +8,8 @@ export function PrivacyPage() {
           Privacy &amp; Local Data
         </h1>
         <p className="mt-3 text-sm leading-6 text-studio-muted sm:text-base">
-          FrameSync processes screen, camera, and microphone media in your
-          browser. Your recording files are not uploaded to a FrameSync server.
+          Orby processes screen, camera, and microphone media in your browser.
+          Your recording files are not uploaded to an Orby server.
         </p>
       </header>
 

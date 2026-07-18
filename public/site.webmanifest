@@ -1,0 +1,17 @@
+{
+  "name": "Orby — Private Screen Recorder",
+  "short_name": "Orby",
+  "description": "Record your screen, browser tab, webcam, and microphone privately in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#111827",
+  "icons": [
+    {
+      "src": "/orby-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

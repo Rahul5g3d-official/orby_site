@@ -1,6 +1,6 @@
-# framesync
+# Orby
 
-framesync is a private, browser-based recording studio built with React and TypeScript. It captures a browser tab, window, or display, can add one webcam and microphone, and produces a local recording without an application backend.
+Orby is a private, browser-based recording studio built with React and TypeScript. It captures a browser tab, window, or display, can add one webcam and microphone, and produces a local recording without an application backend.
 
 ## Features
 

@@ -11,11 +11,11 @@ export function Footer() {
       <div className="mx-auto flex max-w-[1480px] flex-col gap-3 px-4 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-6">
         <div className="space-y-1">
           <p className="text-xs font-medium text-studio-text">
-            © {new Date().getFullYear()} FrameSync. All rights reserved.
+            © {new Date().getFullYear()} Orby. All rights reserved.
           </p>
 
           <p className="max-w-xl text-[11px] leading-5 text-studio-muted">
-            Your recordings and media stay on your device. FrameSync does not
+            Your recordings and media stay on your device. Orby does not
             upload, store, or access your recording data.
           </p>
         </div>
