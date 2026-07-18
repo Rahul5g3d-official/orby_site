@@ -18,7 +18,7 @@ export function Navbar() {
           className="flex min-w-0 items-center gap-3 text-studio-text"
         >
           <img
-            src="/orby-icon.svg"
+            src="/orby-mark-v2.svg"
             alt=""
             className="h-9 w-9 shrink-0 rounded-lg"
             width="36"

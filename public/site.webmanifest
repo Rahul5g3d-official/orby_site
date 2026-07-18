@@ -8,7 +8,7 @@
   "theme_color": "#111827",
   "icons": [
     {
-      "src": "/orby-icon.svg",
+      "src": "/orby-mark-v2.svg",
       "sizes": "any",
       "type": "image/svg+xml",
       "purpose": "any maskable"
