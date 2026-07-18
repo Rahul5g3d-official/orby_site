@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes } from "react-router-dom";
+import { Seo } from "./components/Seo";
 import { AppLayout } from "./components/layout/AppLayout";
 import { HomePage } from "./routes/HomePage";
 import { OpenSourcePage } from "./routes/OpenSourcePage";
@@ -9,6 +10,7 @@ import { StudioPage } from "./routes/StudioPage";
 export default function App() {
   return (
     <AppLayout>
+      <Seo />
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/studio" element={<StudioPage />} />
